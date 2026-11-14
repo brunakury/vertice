@@ -268,8 +268,8 @@ const Indicators = () => {
 /* ------------------------------------------------------------------ */
 const DEC = [
   ['Aprovar reajuste seletivo de 1,5%', 'Comitê executivo', 'até 15 jul', '+R$ 0,72 mi', 'warn', 'Pendente de aprovação', 'Aplicar nas contas com maior defasagem, preservando exceções para clientes estratégicos.'],
-  ['Revisar contratos de frete do Sudeste', 'Operações', 'até 31 jul', '+R$ 0,42 mi', 'gold', 'Em análise', 'Renegociar rotas e consolidar entregas sem reduzir o nível de serviço.'],
-  ['Manter plano de expansão do 2S26', 'Diretoria', '30 jun', 'Sem impacto no EBITDA', 'ok', 'Aprovada', 'Expansão no Sul mantida; revisar premissas de mix na próxima reunião.'],
+  ['Revisar frete do Sudeste e Piloto de CD Nordeste', 'Operações & Logística', 'até 31 jul', '+R$ 0,42 mi', 'gold', 'Em análise', 'Renegociar rotas de SP/RJ e modelar CD avançado para cortar atraso de 12,7% no Nordeste, blindando recompra.'],
+  ['Manter plano de expansão do 2S26 no Sul', 'Diretoria', '30 jun', 'Sem impacto no EBITDA', 'ok', 'Aprovada', 'Expansão no Sul mantida (SLA em 5,9% e R$ 1,9 mi de GMV controlado); revisar premissas de mix na próxima reunião.'],
 ];
 
 const Decisions = ({ onBrief }) => {

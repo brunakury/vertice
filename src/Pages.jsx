@@ -19,8 +19,8 @@ const PageHead = ({ title, sub, right }) => (
 const PLAN = [
   ['Reajuste seletivo de preço', 'Comercial', 0, 0.5, 40, '+R$ 0,72 mi', 'warn', 'Revisão necessária'],
   ['Eficiência de frete no Sudeste', 'Operações', 0, 1, 25, '+R$ 0,42 mi', 'gold', 'Em andamento'],
-  ['Revisão de mix de contratos', 'Comercial', 0, 2, 10, 'A medir', 'warn', 'Revisão necessária'],
-  ['Expansão de unidades no Sul', 'Diretoria', 0.5, 3, 60, 'A medir', 'ok', 'No prazo'],
+  ['CD Avançado no Nordeste (Corte de SLA)', 'Logística & Ops', 0.5, 2.5, 35, '+1.100 recompras', 'ok', 'Em modelagem'],
+  ['Expansão de malha no Sul', 'Diretoria', 0.5, 3, 60, 'SLA < 6%', 'ok', 'No prazo'],
 ];
 const M2 = ['Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
@@ -115,10 +115,10 @@ export const Scenarios = ({ sim, saved, setSaved, selected, setSelected, goto })
 /* Riscos: matriz probabilidade × impacto                              */
 /* ------------------------------------------------------------------ */
 const RISKS = [
-  ['Concentração no Sudeste', 'danger', 'Alto', 2, 2, '3 contratos explicam 38% do desvio de margem. Renovações em julho; revisar preço e frete.', 'Diretoria comercial', '08 jul'],
+  ['Concentração de volume no Sudeste', 'danger', 'Alto', 2, 2, 'Sudeste responde por 65,4% dos 96.478 pedidos e R$ 8,65 mi de GMV. 3 contratos concentram o desvio.', 'Diretoria comercial', '08 jul'],
+  ['Estouro de SLA no Nordeste (12,7% atraso)', 'danger', 'Alto', 2, 1, 'Lead time de 19,5 dias derruba a nota média de 4,3 para 2,04 e corrói a retenção regional.', 'Operações & Logística', '15 jul'],
   ['Perda de volume em contas sensíveis a preço', 'warn', 'Moderado', 1, 2, 'O reajuste pode reduzir a conversão. Monitorar semanalmente conversão e margem por contrato.', 'Comercial', 'Semanal'],
-  ['Pontualidade na consolidação de rotas', 'warn', 'Moderado', 1, 1, 'Consolidar entregas do Sudeste sem reduzir o nível de serviço.', 'Operações', '31 jul'],
-  ['Dependência de premissas de demanda', 'ok', 'Baixo', 0, 1, 'O cenário conservador (demanda −6%) mantém receita anual em R$ 96,4 mi.', 'Planejamento', 'Trimestral'],
+  ['Pontualidade na consolidação de rotas last-mile', 'warn', 'Moderado', 1, 1, 'Consolidar entregas de SP e RJ sem estourar o limite de 8% de atraso tolerado.', 'Operações', '31 jul'],
 ];
 
 export const Risks = () => {

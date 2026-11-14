@@ -13,7 +13,29 @@ export const REAL = [7.0, 7.7, 7.5, 8.4, 8.7, 9.3];
 export const META = [7.2, 7.8, 8.1, 8.7, 9.0, 9.6];
 export const BASE_H2 = [8.6, 8.8, 9.0, 9.1, 9.3, 9.4];
 
-export const UNITS = { 'Todas as unidades': 1, Sudeste: 0.5, Sul: 0.25, Nordeste: 0.15, Outras: 0.1 };
+export const UNITS = { 'Todas as unidades': 1, Sudeste: 0.654, Sul: 0.144, Nordeste: 0.113, 'Centro-Oeste': 0.064, Norte: 0.025 };
+
+/* Microdados consolidados da malha logística e e-commerce (Olist Indicadores) */
+export const OLIST_REGIOES = [
+  { regiao: 'Sudeste', pedidos: 66200, gmv: 8.65, taxaAtraso: 6.1, leadTime: 10.3, share: 65.4, ufs: ['SP', 'RJ', 'MG', 'ES'] },
+  { regiao: 'Sul', pedidos: 13814, gmv: 1.90, taxaAtraso: 5.9, leadTime: 13.5, share: 14.4, ufs: ['RS', 'PR', 'SC'] },
+  { regiao: 'Nordeste', pedidos: 9044, gmv: 1.50, taxaAtraso: 12.7, leadTime: 19.5, share: 11.3, ufs: ['BA', 'PE', 'CE', 'MA', 'PB', 'PI', 'RN', 'AL', 'SE'] },
+  { regiao: 'Centro-Oeste', pedidos: 5624, gmv: 0.85, taxaAtraso: 6.5, leadTime: 14.6, share: 6.4, ufs: ['DF', 'GO', 'MT', 'MS'] },
+  { regiao: 'Norte', pedidos: 1796, gmv: 0.33, taxaAtraso: 8.6, leadTime: 22.1, share: 2.5, ufs: ['PA', 'TO', 'RO', 'AM', 'AC', 'AP', 'RR'] }
+];
+
+export const OLIST_NATIONAL_TOTALS = {
+  totalPedidos: 96478,
+  gmvTotal: 13221498.11,
+  gmvMi: 13.22,
+  taxaAtrasoNacional: 6.8,
+  leadTimeMedioDias: 12.1,
+  notaNoPrazo: 4.29,
+  notaAtrasado: 2.27,
+  quedaNotaPts: 2.02,
+  recompraNoPrazoPct: 6.21,
+  recompraAtrasadoPct: 5.19
+};
 
 /* Modelo simples e transparente do simulador (premissas ilustrativas) */
 export const calc = (price, unit = 'Todas as unidades') => {
@@ -83,6 +105,30 @@ export const ANS = {
     risk: 'Risco de execução: dependência de dados do CRM atualizados diariamente.',
     prem: ['Classificação de risco: matriz interna do Grupo Alvora'],
   },
+  sla: {
+    title: 'Atrasos no SLA derrubam a nota do cliente em 2,02 pontos e contraem a recompra.',
+    text: 'Na malha nacional de 96.478 pedidos e R$ 13,2 mi de GMV, a taxa média de atraso é de 6,8%. Quando o pedido atrasa, a nota do cliente despenca de 4,29 para 2,27 (−47%) e a recompra cai de 6,21% para 5,19%. O gargalo crítico concentra-se no Nordeste (12,7% de atraso e 19,5 dias de lead time).',
+    metrics: [['6,8%', 'Taxa atraso nacional'], ['−2,02 pts', 'Queda de nota'], ['12,7%', 'Gargalo Nordeste']],
+    levers: [
+      ['Descentralizar CD no Nordeste', '+R$ 0,42 mi', 'Implantar hub cross-docking para comprimir lead time de 19,5 para 13 dias.'],
+      ['Rotas expressas Last-Mile', '+1.100 recompras', 'Renegociar contratos de entrega regional reduzindo atrasos em 45%.']
+    ],
+    decision: 'Aprovar alocação de CD regional avançado no Nordeste, protegendo R$ 1,5 mi de GMV sob risco de churn.',
+    risk: 'Risco operacional: custo de estocagem descentralizada se o giro for mal dimensionado.',
+    prem: ['Microdados reais: 96.478 pedidos em 27 UFs', 'Lead time médio nacional: 12,1 dias']
+  },
+  cd: {
+    title: 'A alocação de um CD Regional protege até R$ 850 mil de GMV em risco.',
+    text: 'A simulação elástica indica que uma redução de 3,5 dias no lead time e corte de 45% na taxa de atraso salva mais de 2.900 pedidos do atraso e preserva mais de 280 clientes adicionais na recompra, com ganho direto no CSAT ponderado.',
+    metrics: [['+2.900', 'Pedidos salvos'], ['+R$ 410 mil', 'GMV protegido'], ['+0,09', 'Ganho CSAT']],
+    levers: [
+      ['CD Hub Express', '−3,5 dias', 'Compressão direta do tempo de trânsito interestadual.'],
+      ['Proteção de LTV', '+280 clientes', 'Retenção garantida na carteira de compradores recorrentes.']
+    ],
+    decision: 'Priorizar piloto de CD regional com modelo satélite antes de investimento em infraestrutura pesada.',
+    risk: 'Risco de capital de giro alocado em praças com densidade menor que o Sudeste.',
+    prem: ['Simulador Vértice de Elasticidade Logística', 'Threshold de corte de atraso: 45%']
+  },
   fallback: {
     title: 'Preciso de um recorte para responder com evidências.',
     text: 'Posso analisar margem, EBITDA, cenários, riscos, volume e contratos do 1S26. Reformule indicando o indicador ou a decisão que deseja avaliar.',
@@ -93,6 +139,8 @@ export const ANS = {
 
 export const pick = (q) => {
   const s = q.toLowerCase();
+  if (/sla|atraso|log[ií]stica|entrega|prazo|frete/.test(s)) return ANS.sla;
+  if (/cd|centro de distribui[cç][aã]o|armaz[eé]m|hub/.test(s)) return ANS.cd;
   if (/volume|cair|queda/.test(s)) return ANS.volume;
   if (/contrato/.test(s)) return ANS.contratos;
   if (/cen[aá]rio|compar/.test(s)) return ANS.cenarios;

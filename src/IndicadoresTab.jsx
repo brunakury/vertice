@@ -30,7 +30,12 @@ import {
   ReferenceLine,
   Cell
 } from 'recharts';
+import { C, fmt, signed, OLIST_REGIOES, OLIST_NATIONAL_TOTALS } from './data.js';
+import { Badge, Btn, Count, Field, SelectBox } from './ui.jsx';
 
+// ==========================================
+// 1. DADOS PADRÃO EMBUTIDOS (olist_indicadores.json)
+// ==========================================
 export const OLIST_ESTADOS_DATA = [
   {
     uf: "SP",
@@ -708,27 +713,18 @@ export function IndicadoresTab({
     ];
   }, [activeRecorte]);
 
-  const statusSLA = useMemo(() => {
+  const statusTone = useMemo(() => {
     const tx = activeRecorte.taxa_atraso_pct;
-    if (tx < 6.0) {
-      return {
-        label: 'SLA em Meta Excelente',
-        badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-        dotClass: 'bg-emerald-500'
-      };
-    }
-    if (tx <= 10.0) {
-      return {
-        label: 'Alerta Operacional de SLA',
-        badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
-        dotClass: 'bg-amber-500'
-      };
-    }
-    return {
-      label: 'Risco Crítico de Retenção',
-      badgeClass: 'bg-[#FFF7ED] text-[#C2410C] border-[#FDBA74]',
-      dotClass: 'bg-[#C2410C]'
-    };
+    if (tx < 6.0) return 'ok';
+    if (tx <= 10.0) return 'warn';
+    return 'danger';
+  }, [activeRecorte.taxa_atraso_pct]);
+
+  const statusLabel = useMemo(() => {
+    const tx = activeRecorte.taxa_atraso_pct;
+    if (tx < 6.0) return 'SLA em Meta Excelente';
+    if (tx <= 10.0) return 'Alerta Operacional de SLA';
+    return 'Risco Crítico de Retenção';
   }, [activeRecorte.taxa_atraso_pct]);
 
   const deltaNota = activeRecorte.nota_media_no_prazo - activeRecorte.nota_media_atrasado;
@@ -736,757 +732,674 @@ export function IndicadoresTab({
   const deltaRecompra = activeRecorte.taxa_recompra_no_prazo_pct - activeRecorte.taxa_recompra_atrasado_pct;
 
   return (
-    <div className="w-full text-neutral-900 antialiased font-sans pb-16">
-      <div className="max-w-7xl mx-auto space-y-8">
-        
-        {/* Cabeçalho de Controle e Filtros */}
-        <header className="border-b border-neutral-200/80 pb-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400 font-mono">
-                  Painel de Decisão Operacional
-                </span>
-                <span className="text-neutral-500">•</span>
-                <span className="text-[11px] font-medium text-neutral-400">
-                  Malha Logística & Elasticidade de Retenção
-                </span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-normal tracking-tight text-[#F7F8FA] font-serif">
-                Indicadores de SLA & <span className="italic font-serif text-[#F4B942]">Impacto na Recompra</span>
-              </h2>
-            </div>
+    <div className="flex flex-col gap-10">
+      
+      {/* ========================================================= */}
+      {/* 1. CABEÇALHO & CONTROLE GEOGRÁFICO                        */}
+      {/* ========================================================= */}
+      <header className="flex flex-wrap items-end justify-between gap-6 border-b border-[#232C3B] pb-6">
+        <div>
+          <p className="text-[16px] font-light text-[#A8B0BF]">
+            Comitê executivo · Malha logística e elasticidade de retenção
+          </p>
+          <h2 className="font-display mt-2 max-w-[1040px] text-[clamp(36px,4.8vw,64px)] leading-[.98]">
+            Indicadores de SLA & <span className="font-sans font-extralight italic text-[#F4B942]">Impacto na Recompra</span>
+          </h2>
+          <p className="mt-3 text-[16px] font-light text-[#A8B0BF]">
+            Base consolidada: <strong className="text-[#F7F8FA] font-medium">{formatNumber(activeRecorte.total_pedidos)} pedidos</strong> · GMV total de <strong className="text-[#F4B942] font-medium">{formatMoney(activeRecorte.gmv_total)}</strong>
+          </p>
+        </div>
 
-            <div className="flex items-center gap-3">
-              <div
-                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium ${statusSLA.badgeClass}`}
-              >
-                <span className={`w-2 h-2 rounded-full ${statusSLA.dotClass} animate-pulse`} />
-                <span>{statusSLA.label}</span>
-                <span className="font-mono font-semibold ml-0.5">
-                  ({formatPct(activeRecorte.taxa_atraso_pct)})
-                </span>
-              </div>
-            </div>
-          </div>
+        <div className="flex items-center gap-3">
+          <Badge tone={statusTone}>
+            {statusLabel} · {formatPct(activeRecorte.taxa_atraso_pct)}
+          </Badge>
+        </div>
+      </header>
 
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-4 bg-white p-3.5 rounded-xl border border-neutral-200/80 shadow-xs">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500 mr-1 flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5 text-neutral-400" />
-                Recorte Geográfico:
-              </span>
+      {/* Barra de Filtro de Região */}
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#232C3B] bg-[#121821] p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm font-light text-[#A8B0BF] flex items-center gap-2">
+            <Building2 size={16} className="text-[#F4B942]" />
+            Recorte:
+          </span>
 
-              <div className="relative">
-                <select
-                  value={selectedUF}
-                  aria-label="Filtrar por Região ou Estado"
-                  onChange={(e) => setSelectedUF(e.target.value)}
-                  className="appearance-none bg-neutral-50 hover:bg-neutral-100/80 text-neutral-900 font-medium text-xs rounded-lg pl-3 pr-8 py-2 border border-neutral-300 transition-colors cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-neutral-900/10"
-                >
-                  <option value="TODOS">Consolidado Nacional (Todos os 27 Estados)</option>
-                  <optgroup label="Estados Individuais (Ordenados por Volume)">
-                    {listaUFs.map((est) => (
-                      <option key={est.uf} value={est.uf}>
-                        {est.uf} — {formatNumber(est.total_pedidos)} pedidos ({formatPct(est.taxa_atraso_pct)} atraso)
-                      </option>
-                    ))}
-                  </optgroup>
-                </select>
-                <ChevronDown className="w-3.5 h-3.5 text-neutral-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
-
-              <div className="hidden lg:flex items-center gap-1.5 ml-2 border-l border-neutral-200 pl-3">
-                {['TODOS', 'SP', 'RJ', 'MG', 'RS', 'BA', 'CE'].map((uf) => (
-                  <button
-                    key={uf}
-                    onClick={() => setSelectedUF(uf)}
-                    className={`px-2.5 py-1 text-xs rounded-md font-medium transition-all ${
-                      selectedUF === uf
-                        ? 'bg-neutral-900 text-white shadow-xs'
-                        : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200/70 hover:text-neutral-900'
-                    }`}
-                  >
-                    {uf === 'TODOS' ? 'Brasil' : uf}
-                  </button>
+          <div className="relative min-w-[260px]">
+            <select
+              value={selectedUF}
+              aria-label="Filtrar por Região ou Estado"
+              onChange={(e) => setSelectedUF(e.target.value)}
+              className="h-11 w-full appearance-none rounded-lg border border-[#232C3B] bg-[#0B0F14] px-4 pr-10 text-sm text-[#F7F8FA] transition-colors hover:border-[#A8B0BF] focus:border-[#F4B942] cursor-pointer"
+            >
+              <option value="TODOS">Consolidado Nacional (Todos os 27 Estados)</option>
+              <optgroup label="Estados por Volume">
+                {listaUFs.map((est) => (
+                  <option key={est.uf} value={est.uf}>
+                    {est.uf} — {formatNumber(est.total_pedidos)} pedidos ({formatPct(est.taxa_atraso_pct)} atraso)
+                  </option>
                 ))}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 text-xs text-neutral-500">
-              <span className="font-mono">
-                Amostra: <strong className="text-neutral-900 font-semibold">{formatNumber(activeRecorte.total_pedidos)}</strong> pedidos
-              </span>
-              <span className="text-neutral-300">|</span>
-              <span className="font-mono">
-                GMV: <strong className="text-neutral-900 font-semibold">{formatMoney(activeRecorte.gmv_total)}</strong>
-              </span>
-            </div>
+              </optgroup>
+            </select>
+            <ChevronDown size={16} aria-hidden="true" className="pointer-events-none absolute right-3 top-3.5 text-[#A8B0BF]" />
           </div>
-        </header>
 
-        {/* 2. Camada Nativa de IA (Diagnóstico) */}
-        <section className="bg-white rounded-xl border border-neutral-200 shadow-xs overflow-hidden transition-all">
-          <div className="px-5 py-4 border-b border-neutral-200/70 flex flex-wrap items-center justify-between gap-3 bg-neutral-50/50">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-neutral-900 text-white flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-amber-300" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold tracking-tight text-neutral-950">
-                    Diagnóstico Executivo por Recorte
-                  </h3>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-neutral-100 text-neutral-600 border border-neutral-200">
-                    {aiDiagnosis?.source === 'gemini' ? 'Gemini 3.8 Flash' : 'Heurística Operacional'}
-                  </span>
-                </div>
-                <p className="text-xs text-neutral-500">
-                  Síntese acionável para o comitê de operações · Recorte {activeRecorte.uf === 'TODOS' ? 'Nacional' : activeRecorte.uf}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-1.5 ml-2 border-l border-[#232C3B] pl-4">
+            {['TODOS', 'SP', 'RJ', 'MG', 'RS', 'BA', 'CE'].map((uf) => (
               <button
-                onClick={() => setShowKeyModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-700 bg-white hover:bg-neutral-100 border border-neutral-200 rounded-lg shadow-xs transition-colors cursor-pointer"
-                title="Configurar chave da API Gemini"
+                key={uf}
+                onClick={() => setSelectedUF(uf)}
+                className={`h-9 px-3 rounded-lg text-xs transition-colors ${
+                  selectedUF === uf
+                    ? 'bg-[#F4B942] font-semibold text-[#0B0F14]'
+                    : 'bg-[#1A2230] text-[#A8B0BF] hover:bg-[#232C3B] hover:text-[#F7F8FA]'
+                }`}
               >
-                <Key className="w-3.5 h-3.5 text-neutral-500" />
-                <span>{customApiKey ? 'Chave Ativa' : 'Configurar Chave'}</span>
+                {uf === 'TODOS' ? 'Brasil' : uf}
               </button>
+            ))}
+          </div>
+        </div>
 
-              <button
-                onClick={() => fetchAIDiagnosis(activeRecorte, true)}
-                disabled={aiLoading}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-700 bg-white hover:bg-neutral-100 border border-neutral-200 rounded-lg shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
-                title="Regenerar análise com IA"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 text-neutral-500 ${aiLoading ? 'animate-spin' : ''}`} />
-                <span>{aiLoading ? 'Processando...' : 'Reavaliar'}</span>
-              </button>
+        <div className="flex items-center gap-4 text-xs font-light text-[#A8B0BF]">
+          <span>Lead time: <strong className="text-[#F7F8FA] font-medium">{activeRecorte.lead_time_medio_dias.toFixed(1)} dias</strong></span>
+          <span className="text-[#232C3B]">|</span>
+          <span>Atraso médio: <strong className="text-[#F7F8FA] font-medium">+{activeRecorte.atraso_medio_quando_atrasa_dias.toFixed(1)} dias</strong></span>
+        </div>
+      </div>
+
+      {/* ========================================================= */}
+      {/* 2. CAMADA NATIVA DE IA ("DIAGNÓSTICO EXECUTIVO")           */}
+      {/* ========================================================= */}
+      <section className="rounded-2xl border border-[#232C3B] bg-[#121821] p-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#232C3B] pb-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#1A2230] text-[#F4B942]">
+              <Sparkles size={20} />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-[20px] font-semibold text-[#F7F8FA] leading-tight">
+                  Diagnóstico Executivo por Recorte
+                </h3>
+                <Badge tone={aiDiagnosis?.source === 'gemini' ? 'gold' : 'neutral'}>
+                  {aiDiagnosis?.source === 'gemini' ? 'Gemini 3.8 Flash' : 'Heurística Operacional'}
+                </Badge>
+              </div>
+              <p className="text-sm font-light text-[#A8B0BF] mt-0.5">
+                Diretrizes de operações logísticas para o recorte {activeRecorte.uf === 'TODOS' ? 'Nacional' : activeRecorte.uf}
+              </p>
             </div>
           </div>
 
-          {showKeyModal && (
-            <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-              <div className="bg-white rounded-2xl border border-neutral-200 shadow-xl max-w-md w-full p-6 space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
-                  <div className="flex items-center gap-2">
-                    <Key className="w-4 h-4 text-neutral-800" />
-                    <h3 className="text-sm font-semibold text-neutral-950">Chave da API Gemini</h3>
-                  </div>
-                  <button
-                    onClick={() => setShowKeyModal(false)}
-                    className="p-1 rounded-md text-neutral-400 hover:text-neutral-700 transition-colors cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+          <div className="flex items-center gap-2">
+            <Btn variant="secondary" icon={Key} onClick={() => setShowKeyModal(true)}>
+              {customApiKey ? 'Chave ativa' : 'Configurar chave'}
+            </Btn>
+            <Btn variant="outline" icon={RefreshCw} onClick={() => fetchAIDiagnosis(activeRecorte, true)} loading={aiLoading}>
+              Reavaliar
+            </Btn>
+          </div>
+        </div>
+
+        {/* Modal da API Key */}
+        {showKeyModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
+            <div className="w-full max-w-md rounded-2xl border border-[#232C3B] bg-[#121821] p-6 text-[#F7F8FA] space-y-4 animate-[pageIn_.3s_ease-out]">
+              <div className="flex items-center justify-between border-b border-[#232C3B] pb-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-[#F4B942]">
+                  <Key size={16} />
+                  <span>Google AI Studio Key</span>
                 </div>
-
-                <p className="text-xs text-neutral-600 leading-relaxed">
-                  Caso seu ambiente não possua arquivo <code className="px-1.5 py-0.5 rounded-sm bg-neutral-100 font-mono text-neutral-800">.env</code> com <code className="px-1.5 py-0.5 rounded-sm bg-neutral-100 font-mono text-neutral-800">VITE_GEMINI_API_KEY</code>, você pode colar sua chave diretamente abaixo. Ela ficará salva localmente no seu navegador (<span className="font-mono text-neutral-800">localStorage</span>).
-                </p>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="modal-gemini-key-tab" className="text-xs font-semibold text-neutral-700">
-                    Google AI Studio Key:
-                  </label>
-                  <input
-                    id="modal-gemini-key-tab"
-                    type="password"
-                    placeholder="AIzaSy..."
-                    value={customApiKey}
-                    onChange={(e) => setCustomApiKey(e.target.value)}
-                    className="w-full h-10 px-3 text-xs font-mono rounded-lg border border-neutral-300 focus:outline-hidden focus:ring-2 focus:ring-neutral-900/20"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between pt-2">
-                  <button
+                <button onClick={() => setShowKeyModal(false)} className="text-[#A8B0BF] hover:text-[#F7F8FA]">
+                  <X size={16} />
+                </button>
+              </div>
+              <p className="text-xs text-[#A8B0BF] leading-relaxed">
+                Cole sua chave do Gemini 3.8 Flash. Ela será salva localmente no navegador (<code className="text-[#F4B942]">localStorage</code>).
+              </p>
+              <input
+                type="password"
+                placeholder="AIzaSy..."
+                value={customApiKey}
+                onChange={(e) => setCustomApiKey(e.target.value)}
+                className="h-11 w-full rounded-lg border border-[#232C3B] bg-[#0B0F14] px-4 font-mono text-sm text-[#F7F8FA] focus:border-[#F4B942]"
+              />
+              <div className="flex items-center justify-between pt-2">
+                <button
+                  onClick={() => {
+                    setCustomApiKey('');
+                    if (typeof window !== 'undefined') localStorage.removeItem('VERTICE_GEMINI_API_KEY');
+                    setShowKeyModal(false);
+                    fetchAIDiagnosis(activeRecorte, true);
+                  }}
+                  className="text-xs text-[#E5484D] hover:underline"
+                >
+                  Remover chave
+                </button>
+                <div className="flex gap-2">
+                  <Btn variant="secondary" onClick={() => setShowKeyModal(false)}>Cancelar</Btn>
+                  <Btn
+                    variant="primary"
                     onClick={() => {
-                      setCustomApiKey('');
                       if (typeof window !== 'undefined') {
-                        localStorage.removeItem('VERTICE_GEMINI_API_KEY');
+                        if (customApiKey.trim()) localStorage.setItem('VERTICE_GEMINI_API_KEY', customApiKey.trim());
+                        else localStorage.removeItem('VERTICE_GEMINI_API_KEY');
                       }
                       setShowKeyModal(false);
                       fetchAIDiagnosis(activeRecorte, true);
                     }}
-                    className="text-xs text-neutral-500 hover:text-red-700 font-medium transition-colors"
                   >
-                    Remover Chave
-                  </button>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setShowKeyModal(false)}
-                      className="px-3 py-1.5 text-xs font-medium rounded-lg border border-neutral-200 text-neutral-700 hover:bg-neutral-50 transition-colors"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (typeof window !== 'undefined') {
-                          if (customApiKey.trim()) {
-                            localStorage.setItem('VERTICE_GEMINI_API_KEY', customApiKey.trim());
-                          } else {
-                            localStorage.removeItem('VERTICE_GEMINI_API_KEY');
-                          }
-                        }
-                        setShowKeyModal(false);
-                        fetchAIDiagnosis(activeRecorte, true);
-                      }}
-                      className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-neutral-950 text-white hover:bg-neutral-800 shadow-xs transition-colors"
-                    >
-                      Salvar & Aplicar
-                    </button>
-                  </div>
+                    Salvar
+                  </Btn>
                 </div>
               </div>
             </div>
-          )}
-
-          <div className="p-5">
-            {aiLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-pulse">
-                {[1, 2, 3].map((idx) => (
-                  <div key={idx} className="p-4 rounded-lg bg-neutral-100/70 h-28 flex flex-col justify-between">
-                    <div className="w-24 h-4 bg-neutral-200 rounded-sm" />
-                    <div className="w-full h-8 bg-neutral-200 rounded-sm" />
-                  </div>
-                ))}
-              </div>
-            ) : aiDiagnosis ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-lg bg-neutral-50/70 border border-neutral-200/80 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2 text-xs font-semibold uppercase tracking-wider text-amber-700">
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                      <span>Gargalo de SLA</span>
-                    </div>
-                    <p className="text-xs leading-relaxed text-neutral-800">
-                      {aiDiagnosis.bottleneck}
-                    </p>
-                  </div>
-                  <div className="mt-3 pt-2 border-t border-neutral-200/60 flex items-center justify-between text-[11px] text-neutral-500 font-mono">
-                    <span>Taxa de atraso:</span>
-                    <strong className="text-neutral-900">{formatPct(activeRecorte.taxa_atraso_pct)}</strong>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-lg bg-neutral-50/70 border border-neutral-200/80 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2 text-xs font-semibold uppercase tracking-wider text-[#C2410C]">
-                      <TrendingDown className="w-3.5 h-3.5 text-[#C2410C] shrink-0" />
-                      <span>Impacto em Satisfação & LTV</span>
-                    </div>
-                    <p className="text-xs leading-relaxed text-neutral-800">
-                      {aiDiagnosis.impact}
-                    </p>
-                  </div>
-                  <div className="mt-3 pt-2 border-t border-neutral-200/60 flex items-center justify-between text-[11px] text-neutral-500 font-mono">
-                    <span>Queda de nota:</span>
-                    <strong className="text-[#C2410C]">-{deltaNota.toFixed(2)} pts ({formatPct(deltaNotaPct, 0)})</strong>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-lg bg-neutral-50/70 border border-neutral-200/80 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-700">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>Ação Imediata Recomendada</span>
-                    </div>
-                    <p className="text-xs leading-relaxed text-neutral-800">
-                      {aiDiagnosis.recommendation}
-                    </p>
-                  </div>
-                  <div className="mt-3 pt-2 border-t border-neutral-200/60 flex items-center justify-between text-[11px] text-neutral-500 font-mono">
-                    <span>Lead time médio:</span>
-                    <strong className="text-neutral-900">{activeRecorte.lead_time_medio_dias.toFixed(1)} dias</strong>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-
-            {aiError && (
-              <p className="mt-3 text-[11px] text-neutral-500 flex items-center gap-1.5 font-mono">
-                <Info className="w-3.5 h-3.5 text-neutral-400" />
-                {aiError}
-              </p>
-            )}
           </div>
-        </section>
+        )}
 
-        {/* 3. Linha de 4 KPIs */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-5 rounded-xl border border-neutral-200 shadow-xs flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between text-neutral-500 mb-2">
-                <span className="text-xs font-semibold uppercase tracking-wider">Volume & GMV</span>
-                <DollarSign className="w-4 h-4 text-neutral-400" />
-              </div>
-              <div className="text-2xl font-bold tracking-tight text-neutral-950 font-sans">
-                {formatNumber(activeRecorte.total_pedidos)}
-                <span className="text-xs font-normal text-neutral-500 ml-1.5">pedidos</span>
-              </div>
-              <div className="text-sm font-semibold text-neutral-700 mt-1">
-                {formatMoney(activeRecorte.gmv_total)}
-              </div>
+        <div className="mt-6">
+          {aiLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-pulse">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-32 rounded-xl bg-[#1A2230] border border-[#232C3B]" />
+              ))}
             </div>
-            <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-500">
-              <span>Ticket Médio:</span>
-              <span className="font-mono font-medium text-neutral-900">
-                {formatMoney(activeRecorte.gmv_total / activeRecorte.total_pedidos)}
-              </span>
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-xl border border-neutral-200 shadow-xs flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between text-neutral-500 mb-2">
-                <span className="text-xs font-semibold uppercase tracking-wider">Taxa de Atraso (SLA)</span>
-                <Clock className="w-4 h-4 text-neutral-400" />
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className={`text-2xl font-bold tracking-tight ${
-                  activeRecorte.taxa_atraso_pct > 10.0
-                    ? 'text-[#C2410C]'
-                    : activeRecorte.taxa_atraso_pct > 6.0
-                    ? 'text-amber-600'
-                    : 'text-emerald-700'
-                }`}>
-                  {formatPct(activeRecorte.taxa_atraso_pct)}
-                </span>
-                <span className="text-xs text-neutral-500">dos pedidos</span>
-              </div>
-              <div className="text-xs text-neutral-500 mt-1">
-                Atraso médio: <strong className="text-neutral-800">+{activeRecorte.atraso_medio_quando_atrasa_dias.toFixed(1)} dias</strong>
-              </div>
-            </div>
-            <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-500">
-              <span>Status Operacional:</span>
-              <span className={`px-2 py-0.5 rounded-md text-[11px] font-medium ${statusSLA.badgeClass}`}>
-                {activeRecorte.taxa_atraso_pct > 10.0 ? 'Crítico' : activeRecorte.taxa_atraso_pct > 6.0 ? 'Atenção' : 'Dentro da Meta'}
-              </span>
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-xl border border-neutral-200 shadow-xs flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between text-neutral-500 mb-2">
-                <span className="text-xs font-semibold uppercase tracking-wider">Queda de Nota</span>
-                <Star className="w-4 h-4 text-amber-500" />
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold tracking-tight text-[#C2410C]">
-                  -{deltaNota.toFixed(2)}
-                </span>
-                <span className="text-xs font-medium text-neutral-500">pontos</span>
-              </div>
-              <div className="text-xs text-neutral-500 mt-1">
-                De <strong className="text-neutral-900">{activeRecorte.nota_media_no_prazo.toFixed(2)}</strong> (prazo) para <strong className="text-[#C2410C]">{activeRecorte.nota_media_atrasado.toFixed(2)}</strong> (atraso)
-              </div>
-            </div>
-            <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-500">
-              <span>Erosão Relativa:</span>
-              <span className="font-mono font-medium text-[#C2410C]">
-                -{deltaNotaPct.toFixed(1)}% na satisfação
-              </span>
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-xl border border-neutral-200 shadow-xs flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between text-neutral-500 mb-2">
-                <span className="text-xs font-semibold uppercase tracking-wider">Impacto na Retenção</span>
-                <Users className="w-4 h-4 text-neutral-400" />
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold tracking-tight text-neutral-950">
-                  {formatPct(activeRecorte.taxa_recompra_no_prazo_pct)}
-                </span>
-                <span className="text-xs text-neutral-500">recompra no prazo</span>
-              </div>
-              <div className="text-xs text-neutral-500 mt-1">
-                Vs. <strong className="text-neutral-800">{formatPct(activeRecorte.taxa_recompra_atrasado_pct)}</strong> quando sofre atraso
-              </div>
-            </div>
-            <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-500">
-              <span>Variação de Recompra:</span>
-              <span className={`font-mono font-medium ${deltaRecompra > 0 ? 'text-[#C2410C]' : 'text-neutral-700'}`}>
-                {deltaRecompra > 0 ? `-${deltaRecompra.toFixed(2)} p.p.` : `+${Math.abs(deltaRecompra).toFixed(2)} p.p.`}
-              </span>
-            </div>
-          </div>
-        </section>
-
-        {/* 4. Grid Principal (Bloco A e B) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-white p-6 rounded-xl border border-neutral-200 shadow-xs flex flex-col justify-between">
-            <div>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-neutral-100">
+          ) : aiDiagnosis ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="rounded-xl border border-[#232C3B] bg-[#1A2230] p-5 flex flex-col justify-between">
                 <div>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 font-mono">
-                    Pergunta 1 · Diagnóstico de Malha
-                  </span>
-                  <h3 className="text-lg font-semibold text-neutral-950 tracking-tight">
-                    Onde o SLA logístico estoura e compromete a malha?
-                  </h3>
+                  <div className="flex items-center justify-between text-xs font-semibold text-[#FFB020] mb-2 uppercase tracking-wider">
+                    <span className="flex items-center gap-1.5"><AlertTriangle size={14} /> Gargalo de SLA</span>
+                  </div>
+                  <p className="text-sm font-light leading-relaxed text-[#F7F8FA]">
+                    {aiDiagnosis.bottleneck}
+                  </p>
                 </div>
-
-                <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-lg text-xs">
-                  <button
-                    onClick={() => setSortMetric('volume')}
-                    className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
-                      sortMetric === 'volume' ? 'bg-white text-neutral-900 shadow-xs' : 'text-neutral-500 hover:text-neutral-900'
-                    }`}
-                  >
-                    Top Volume
-                  </button>
-                  <button
-                    onClick={() => setSortMetric('atraso')}
-                    className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
-                      sortMetric === 'atraso' ? 'bg-white text-neutral-900 shadow-xs' : 'text-neutral-500 hover:text-neutral-900'
-                    }`}
-                  >
-                    Maior Atraso
-                  </button>
+                <div className="mt-4 pt-3 border-t border-[#232C3B] flex items-center justify-between text-xs text-[#A8B0BF]">
+                  <span>Taxa de atraso:</span>
+                  <strong className="text-[#F7F8FA] font-mono">{formatPct(activeRecorte.taxa_atraso_pct)}</strong>
                 </div>
               </div>
 
-              <p className="text-xs text-neutral-500 mt-3 mb-6">
-                Comparativo de Lead Time Médio (dias) e Taxa de Atraso de SLA (%) nas 10 principais praças. Barra colorida por severidade de atraso (&gt;12% risco crítico).
-              </p>
-
-              <div className="h-72 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dadosBlocoA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                    <XAxis dataKey="uf" tickLine={false} axisLine={{ stroke: '#E2E8F0' }} tick={{ fill: '#64748B', fontSize: 12 }} />
-                    <YAxis tickLine={false} axisLine={{ stroke: '#E2E8F0' }} tick={{ fill: '#64748B', fontSize: 11 }} unit="%" />
-                    <Tooltip
-                      content={({ active, payload }) => {
-                        if (!active || !payload?.length) return null;
-                        const item = payload[0].payload;
-                        return (
-                          <div className="bg-neutral-900 text-white p-3 rounded-lg text-xs shadow-lg space-y-1">
-                            <div className="font-semibold text-sm border-b border-neutral-700 pb-1 mb-1">
-                              Estado: {item.uf}
-                            </div>
-                            <div className="flex justify-between gap-4">
-                              <span className="text-neutral-400">Taxa de Atraso:</span>
-                              <span className="font-mono font-semibold">{item.taxa_atraso_pct}%</span>
-                            </div>
-                            <div className="flex justify-between gap-4">
-                              <span className="text-neutral-400">Lead Time Médio:</span>
-                              <span className="font-mono">{item.lead_time_medio_dias} dias</span>
-                            </div>
-                            <div className="flex justify-between gap-4">
-                              <span className="text-neutral-400">Volume Total:</span>
-                              <span className="font-mono">{formatNumber(item.total_pedidos)} ped.</span>
-                            </div>
-                          </div>
-                        );
-                      }}
-                    />
-                    <ReferenceLine y={8.0} stroke="#D97706" strokeDasharray="3 3" label={{ value: 'Meta SLA: 8%', fill: '#D97706', fontSize: 10, position: 'insideTopRight' }} />
-                    <Bar dataKey="taxa_atraso_pct" radius={[4, 4, 0, 0]}>
-                      {dadosBlocoA.map((entry) => {
-                        const color =
-                          entry.taxa_atraso_pct > 12.0
-                            ? '#C2410C'
-                            : entry.taxa_atraso_pct > 7.0
-                            ? '#D97706'
-                            : '#059669';
-                        return <Cell key={`cell-${entry.uf}`} fill={color} />;
-                      })}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-3 border-t border-neutral-100 flex flex-wrap items-center justify-between text-xs text-neutral-500 gap-2">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-xs bg-[#059669]" /> Sob controle (&lt;7%)
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-xs bg-[#D97706]" /> Alerta (7-12%)
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-xs bg-[#C2410C]" /> Crítico (&gt;12%)
-                </span>
-              </div>
-              <span className="font-mono text-[11px] text-neutral-400">
-                Ponto de corte de tolerância: 8,0%
-              </span>
-            </div>
-          </div>
-
-          <div className="lg:col-span-5 bg-white p-6 rounded-xl border border-neutral-200 shadow-xs flex flex-col justify-between">
-            <div>
-              <div className="pb-4 border-b border-neutral-100">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 font-mono">
-                  Pergunta 2 · Elasticidade de Retenção
-                </span>
-                <h3 className="text-lg font-semibold text-neutral-950 tracking-tight">
-                  Qual o impacto do atraso na nota e recompra?
-                </h3>
-              </div>
-
-              <p className="text-xs text-neutral-500 mt-3 mb-6">
-                Recorte <strong className="text-neutral-900">{activeRecorte.uf === 'TODOS' ? 'Nacional' : activeRecorte.uf}</strong>: comparação direta de satisfação (1-5) e taxa de recompra quando o pedido sofre atraso de entrega.
-              </p>
-
-              <div className="h-56 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dadosBlocoB} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                    <XAxis dataKey="cenario" tickLine={false} axisLine={{ stroke: '#E2E8F0' }} tick={{ fill: '#334155', fontSize: 12, fontWeight: 500 }} />
-                    <YAxis tickLine={false} axisLine={{ stroke: '#E2E8F0' }} tick={{ fill: '#64748B', fontSize: 11 }} domain={[0, 5]} />
-                    <Tooltip
-                      content={({ active, payload }) => {
-                        if (!active || !payload?.length) return null;
-                        const data = payload[0].payload;
-                        return (
-                          <div className="bg-neutral-900 text-white p-3 rounded-lg text-xs shadow-lg space-y-1">
-                            <div className="font-semibold text-sm border-b border-neutral-700 pb-1 mb-1">
-                              Cenário: {data.cenario}
-                            </div>
-                            <div className="flex justify-between gap-4">
-                              <span className="text-neutral-400">Nota Média:</span>
-                              <span className="font-mono font-semibold text-amber-300">{data.nota} ★</span>
-                            </div>
-                            <div className="flex justify-between gap-4">
-                              <span className="text-neutral-400">Taxa de Recompra:</span>
-                              <span className="font-mono font-semibold">{data.recompra}%</span>
-                            </div>
-                          </div>
-                        );
-                      }}
-                    />
-                    <Bar dataKey="nota" name="Nota Média" radius={[4, 4, 0, 0]}>
-                      <Cell fill="#059669" />
-                      <Cell fill="#C2410C" />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className="mt-4 p-3.5 rounded-lg bg-neutral-50 border border-neutral-200/80 space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-neutral-600 font-medium">Nota no Prazo vs. Atrasado:</span>
-                  <span className="font-mono font-bold text-[#C2410C]">
-                    -{deltaNota.toFixed(2)} pts ({formatPct(deltaNotaPct, 0)})
-                  </span>
+              <div className="rounded-xl border border-[#232C3B] bg-[#1A2230] p-5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between text-xs font-semibold text-[#E5484D] mb-2 uppercase tracking-wider">
+                    <span className="flex items-center gap-1.5"><TrendingDown size={14} /> Impacto em LTV & Satisfação</span>
+                  </div>
+                  <p className="text-sm font-light leading-relaxed text-[#F7F8FA]">
+                    {aiDiagnosis.impact}
+                  </p>
                 </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-neutral-600 font-medium">Retenção de Clientes (Recompra):</span>
-                  <span className="font-mono font-bold text-neutral-900">
-                    {formatPct(activeRecorte.taxa_recompra_no_prazo_pct)} → {formatPct(activeRecorte.taxa_recompra_atrasado_pct)}
-                  </span>
+                <div className="mt-4 pt-3 border-t border-[#232C3B] flex items-center justify-between text-xs text-[#A8B0BF]">
+                  <span>Queda de nota:</span>
+                  <strong className="text-[#E5484D] font-mono">-{deltaNota.toFixed(2)} pts ({formatPct(deltaNotaPct, 0)})</strong>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-[#232C3B] bg-[#1A2230] p-5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between text-xs font-semibold text-[#18A957] mb-2 uppercase tracking-wider">
+                    <span className="flex items-center gap-1.5"><CheckCircle2 size={14} /> Ação Imediata</span>
+                  </div>
+                  <p className="text-sm font-light leading-relaxed text-[#F7F8FA]">
+                    {aiDiagnosis.recommendation}
+                  </p>
+                </div>
+                <div className="mt-4 pt-3 border-t border-[#232C3B] flex items-center justify-between text-xs text-[#A8B0BF]">
+                  <span>Lead time médio:</span>
+                  <strong className="text-[#F7F8FA] font-mono">{activeRecorte.lead_time_medio_dias.toFixed(1)} dias</strong>
                 </div>
               </div>
             </div>
+          ) : null}
 
-            <p className="mt-4 text-[11px] text-neutral-500 leading-normal">
-              *Atrasos na entrega quebram o ciclo de confiança do consumidor, reduzindo a chance de recompra subsequente e gerando alto custo de reaquisição.
+          {aiError && (
+            <p className="mt-3 text-xs text-[#A8B0BF] flex items-center gap-1.5 font-light">
+              <Info size={14} className="text-[#F4B942]" />
+              {aiError}
             </p>
+          )}
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* 3. LINHA DE 4 KPIS DE DECISÃO                             */}
+      {/* ========================================================= */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        {/* KPI 1 */}
+        <div className="rounded-2xl border border-[#232C3B] bg-[#121821] p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-sm font-light text-[#A8B0BF] mb-2">
+              <span>Volume & GMV</span>
+              <DollarSign size={16} className="text-[#A8B0BF]" />
+            </div>
+            <div className="font-display text-[clamp(28px,3vw,44px)] leading-none text-[#F7F8FA]">
+              {formatNumber(activeRecorte.total_pedidos)}
+            </div>
+            <p className="mt-2 text-sm font-light text-[#F4B942]">
+              {formatMoney(activeRecorte.gmv_total)}
+            </p>
+          </div>
+          <div className="mt-6 pt-3 border-t border-[#232C3B] flex items-center justify-between text-xs text-[#A8B0BF]">
+            <span>Ticket médio:</span>
+            <span className="text-[#F7F8FA] font-mono">{formatMoney(activeRecorte.gmv_total / activeRecorte.total_pedidos)}</span>
           </div>
         </div>
 
-        {/* 5. Simulador de CD Regional */}
-        <section className="bg-white rounded-xl border border-neutral-200 shadow-xs overflow-hidden">
-          <div className="p-6 border-b border-neutral-100 bg-neutral-50/40">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* KPI 2 */}
+        <div className="rounded-2xl border border-[#232C3B] bg-[#121821] p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-sm font-light text-[#A8B0BF] mb-2">
+              <span>Taxa de Atraso (SLA)</span>
+              <Clock size={16} className="text-[#A8B0BF]" />
+            </div>
+            <div className={`font-display text-[clamp(28px,3vw,44px)] leading-none ${
+              activeRecorte.taxa_atraso_pct > 10 ? 'text-[#E5484D]' : activeRecorte.taxa_atraso_pct > 6 ? 'text-[#FFB020]' : 'text-[#18A957]'
+            }`}>
+              {formatPct(activeRecorte.taxa_atraso_pct)}
+            </div>
+            <p className="mt-2 text-sm font-light text-[#A8B0BF]">
+              Atraso médio: <strong className="text-[#F7F8FA] font-normal">+{activeRecorte.atraso_medio_quando_atrasa_dias.toFixed(1)} dias</strong>
+            </p>
+          </div>
+          <div className="mt-6 pt-3 border-t border-[#232C3B] flex items-center justify-between text-xs text-[#A8B0BF]">
+            <span>Status SLA:</span>
+            <Badge tone={statusTone}>{statusLabel}</Badge>
+          </div>
+        </div>
+
+        {/* KPI 3 */}
+        <div className="rounded-2xl border border-[#232C3B] bg-[#121821] p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-sm font-light text-[#A8B0BF] mb-2">
+              <span>Queda de Nota</span>
+              <Star size={16} className="text-[#F4B942]" />
+            </div>
+            <div className="font-display text-[clamp(28px,3vw,44px)] leading-none text-[#E5484D]">
+              -{deltaNota.toFixed(2)}
+              <span className="text-[18px] font-sans font-light text-[#A8B0BF] ml-1">pts</span>
+            </div>
+            <p className="mt-2 text-sm font-light text-[#A8B0BF]">
+              De {activeRecorte.nota_media_no_prazo.toFixed(2)} (prazo) para {activeRecorte.nota_media_atrasado.toFixed(2)}
+            </p>
+          </div>
+          <div className="mt-6 pt-3 border-t border-[#232C3B] flex items-center justify-between text-xs text-[#A8B0BF]">
+            <span>Erosão de CSAT:</span>
+            <span className="text-[#E5484D] font-mono">-{deltaNotaPct.toFixed(1)}%</span>
+          </div>
+        </div>
+
+        {/* KPI 4 */}
+        <div className="rounded-2xl border border-[#232C3B] bg-[#121821] p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-sm font-light text-[#A8B0BF] mb-2">
+              <span>Impacto na Retenção</span>
+              <Users size={16} className="text-[#A8B0BF]" />
+            </div>
+            <div className="font-display text-[clamp(28px,3vw,44px)] leading-none text-[#F7F8FA]">
+              {formatPct(activeRecorte.taxa_recompra_no_prazo_pct)}
+            </div>
+            <p className="mt-2 text-sm font-light text-[#A8B0BF]">
+              Cai para <strong className="text-[#F7F8FA] font-normal">{formatPct(activeRecorte.taxa_recompra_atrasado_pct)}</strong> no atraso
+            </p>
+          </div>
+          <div className="mt-6 pt-3 border-t border-[#232C3B] flex items-center justify-between text-xs text-[#A8B0BF]">
+            <span>Delta recompra:</span>
+            <span className={`font-mono ${deltaRecompra > 0 ? 'text-[#E5484D]' : 'text-[#18A957]'}`}>
+              {deltaRecompra > 0 ? `-${deltaRecompra.toFixed(2)} p.p.` : `+${Math.abs(deltaRecompra).toFixed(2)} p.p.`}
+            </span>
+          </div>
+        </div>
+
+      </section>
+
+      {/* ========================================================= */}
+      {/* 4. GRID PRINCIPAL (BLOCOS A & B)                          */}
+      {/* ========================================================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* Bloco A: Gargalos de Malha por UF */}
+        <div className="lg:col-span-7 rounded-2xl border border-[#232C3B] bg-[#121821] p-6 sm:p-8 flex flex-col justify-between">
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#232C3B] pb-4">
               <div>
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 font-mono">
-                  Pergunta 3 · Alavanca de Decisão Estratégica
-                </span>
-                <h3 className="text-xl font-semibold text-neutral-950 tracking-tight flex items-center gap-2">
-                  <Sliders className="w-5 h-5 text-neutral-800" />
-                  Simulador de Alocação de CD Regional Avançado
+                <p className="text-xs uppercase tracking-wider text-[#A8B0BF] font-mono">Pergunta 1 · Diagnóstico de Malha</p>
+                <h3 className="text-[22px] font-semibold text-[#F7F8FA] mt-1">
+                  Onde o SLA logístico estoura e compromete a malha?
                 </h3>
-                <p className="text-xs text-neutral-500 mt-1">
-                  Projeção de retorno operacional ao implantar infraestrutura logística ou cross-docking no recorte selecionado (<strong className="text-neutral-900">{activeRecorte.uf === 'TODOS' ? 'Consolidado Nacional' : activeRecorte.uf}</strong>).
+              </div>
+              <div className="flex items-center gap-1 bg-[#1A2230] p-1 rounded-lg text-xs">
+                <button
+                  onClick={() => setSortMetric('volume')}
+                  className={`px-3 py-1 rounded-md transition-colors ${sortMetric === 'volume' ? 'bg-[#F4B942] text-[#0B0F14] font-semibold' : 'text-[#A8B0BF] hover:text-[#F7F8FA]'}`}
+                >
+                  Top Volume
+                </button>
+                <button
+                  onClick={() => setSortMetric('atraso')}
+                  className={`px-3 py-1 rounded-md transition-colors ${sortMetric === 'atraso' ? 'bg-[#F4B942] text-[#0B0F14] font-semibold' : 'text-[#A8B0BF] hover:text-[#F7F8FA]'}`}
+                >
+                  Maior Atraso
+                </button>
+              </div>
+            </div>
+
+            <p className="text-sm font-light text-[#A8B0BF] mt-4 mb-6">
+              Taxa de atraso (%) das 10 principais praças. Destaque para rotas críticas acima da meta de 8%.
+            </p>
+
+            <div className="h-72 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dadosBlocoA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#232C3B" />
+                  <XAxis dataKey="uf" tickLine={false} axisLine={{ stroke: '#232C3B' }} tick={{ fill: '#A8B0BF', fontSize: 12 }} />
+                  <YAxis tickLine={false} axisLine={{ stroke: '#232C3B' }} tick={{ fill: '#A8B0BF', fontSize: 11 }} unit="%" />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+                      const item = payload[0].payload;
+                      return (
+                        <div className="rounded-lg border border-[#232C3B] bg-[#1A2230] p-3 text-xs text-[#F7F8FA] shadow-xl space-y-1">
+                          <p className="font-semibold text-sm border-b border-[#232C3B] pb-1 mb-1 text-[#F4B942]">
+                            Estado: {item.uf}
+                          </p>
+                          <div className="flex justify-between gap-4">
+                            <span className="text-[#A8B0BF]">Taxa de Atraso:</span>
+                            <span className="font-mono font-semibold">{item.taxa_atraso_pct}%</span>
+                          </div>
+                          <div className="flex justify-between gap-4">
+                            <span className="text-[#A8B0BF]">Lead Time:</span>
+                            <span className="font-mono">{item.lead_time_medio_dias} dias</span>
+                          </div>
+                          <div className="flex justify-between gap-4">
+                            <span className="text-[#A8B0BF]">Volume:</span>
+                            <span className="font-mono">{formatNumber(item.total_pedidos)} pedidos</span>
+                          </div>
+                        </div>
+                      );
+                    }}
+                  />
+                  <ReferenceLine y={8.0} stroke="#F4B942" strokeDasharray="3 3" label={{ value: 'Meta: 8%', fill: '#F4B942', fontSize: 10, position: 'insideTopRight' }} />
+                  <Bar dataKey="taxa_atraso_pct" radius={[4, 4, 0, 0]}>
+                    {dadosBlocoA.map((entry) => {
+                      const color =
+                        entry.taxa_atraso_pct > 12.0
+                          ? '#E5484D'
+                          : entry.taxa_atraso_pct > 7.0
+                          ? '#F4B942'
+                          : '#18A957';
+                      return <Cell key={`cell-${entry.uf}`} fill={color} />;
+                    })}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-[#232C3B] flex flex-wrap items-center justify-between text-xs text-[#A8B0BF] gap-2">
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#18A957]" /> &lt;7% Controlado</span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#F4B942]" /> 7–12% Alerta</span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#E5484D]" /> &gt;12% Crítico</span>
+            </div>
+            <span className="font-mono">Ponto de corte: 8,0%</span>
+          </div>
+        </div>
+
+        {/* Bloco B: Elasticidade de Retenção */}
+        <div className="lg:col-span-5 rounded-2xl border border-[#232C3B] bg-[#121821] p-6 sm:p-8 flex flex-col justify-between">
+          <div>
+            <div className="border-b border-[#232C3B] pb-4">
+              <p className="text-xs uppercase tracking-wider text-[#A8B0BF] font-mono">Pergunta 2 · Elasticidade de Retenção</p>
+              <h3 className="text-[22px] font-semibold text-[#F7F8FA] mt-1">
+                Qual o impacto do atraso na nota e recompra?
+              </h3>
+            </div>
+
+            <p className="text-sm font-light text-[#A8B0BF] mt-4 mb-6">
+              Recorte {activeRecorte.uf === 'TODOS' ? 'Nacional' : activeRecorte.uf}: comparação direta de avaliação e probabilidade de recompra.
+            </p>
+
+            <div className="h-56 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dadosBlocoB} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#232C3B" />
+                  <XAxis dataKey="cenario" tickLine={false} axisLine={{ stroke: '#232C3B' }} tick={{ fill: '#F7F8FA', fontSize: 12 }} />
+                  <YAxis tickLine={false} axisLine={{ stroke: '#232C3B' }} tick={{ fill: '#A8B0BF', fontSize: 11 }} domain={[0, 5]} />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+                      const data = payload[0].payload;
+                      return (
+                        <div className="rounded-lg border border-[#232C3B] bg-[#1A2230] p-3 text-xs text-[#F7F8FA] shadow-xl space-y-1">
+                          <p className="font-semibold text-sm border-b border-[#232C3B] pb-1 mb-1 text-[#F4B942]">
+                            {data.cenario}
+                          </p>
+                          <div className="flex justify-between gap-4">
+                            <span className="text-[#A8B0BF]">Nota:</span>
+                            <span className="font-mono text-[#F4B942] font-semibold">{data.nota} ★</span>
+                          </div>
+                          <div className="flex justify-between gap-4">
+                            <span className="text-[#A8B0BF]">Recompra:</span>
+                            <span className="font-mono font-semibold">{data.recompra}%</span>
+                          </div>
+                        </div>
+                      );
+                    }}
+                  />
+                  <Bar dataKey="nota" name="Nota Média" radius={[4, 4, 0, 0]}>
+                    <Cell fill="#18A957" />
+                    <Cell fill="#E5484D" />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="mt-6 rounded-xl border border-[#232C3B] bg-[#1A2230] p-4 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#A8B0BF]">Nota Prazo vs. Atrasado:</span>
+                <span className="font-mono font-semibold text-[#E5484D]">
+                  -{deltaNota.toFixed(2)} pts ({formatPct(deltaNotaPct, 0)})
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#A8B0BF]">Taxa de Recompra:</span>
+                <span className="font-mono font-semibold text-[#F7F8FA]">
+                  {formatPct(activeRecorte.taxa_recompra_no_prazo_pct)} → {formatPct(activeRecorte.taxa_recompra_atrasado_pct)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <p className="mt-4 text-xs font-light text-[#A8B0BF] leading-relaxed">
+            *Atrasos na entrega quebram o ciclo de confiança do consumidor, reduzindo a chance de recompra subsequente e gerando alto custo de reaquisição.
+          </p>
+        </div>
+
+      </div>
+
+      {/* ========================================================= */}
+      {/* 5. SIMULADOR DE ALOCAÇÃO DE CD REGIONAL (ESTILO VÉRTICE)   */}
+      {/* ========================================================= */}
+      <section className="rounded-2xl border border-[#232C3B] bg-[#121821] p-6 sm:p-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#232C3B] pb-6">
+          <div>
+            <p className="text-xs uppercase tracking-wider text-[#A8B0BF] font-mono">
+              Pergunta 3 · Alavanca Estratégica de Decisão
+            </p>
+            <h3 className="font-display text-[clamp(24px,3vw,36px)] text-[#F7F8FA] mt-1 flex items-center gap-2">
+              <Sliders size={24} className="text-[#F4B942]" />
+              Simulador de Alocação de CD Regional Avançado
+            </h3>
+            <p className="text-sm font-light text-[#A8B0BF] mt-1">
+              Projeção elástica de retorno para o recorte <strong className="text-[#F7F8FA] font-medium">{activeRecorte.uf === 'TODOS' ? 'Nacional' : activeRecorte.uf}</strong>.
+            </p>
+          </div>
+
+          {/* Presets Rápidos */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-[#A8B0BF] mr-1 hidden sm:inline font-light">Cenários:</span>
+            <button
+              onClick={() => { setSimLeadTimeReduction(1.5); setSimDelayCutPct(20); }}
+              className="h-9 px-3 rounded-lg border border-[#232C3B] bg-[#1A2230] text-xs text-[#F7F8FA] hover:border-[#A8B0BF] transition-colors"
+            >
+              Last-Mile Leve
+            </button>
+            <button
+              onClick={() => { setSimLeadTimeReduction(3.5); setSimDelayCutPct(45); }}
+              className="h-9 px-3 rounded-lg border border-[#232C3B] bg-[#1A2230] text-xs text-[#F7F8FA] hover:border-[#A8B0BF] transition-colors"
+            >
+              Cross-Docking
+            </button>
+            <button
+              onClick={() => { setSimLeadTimeReduction(6.0); setSimDelayCutPct(70); }}
+              className="h-9 px-3 rounded-lg bg-[#D62828] text-xs font-semibold text-[#F7F8FA] hover:brightness-110 transition-all shadow-xs"
+            >
+              CD Regional Dedicado
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Controles com Sliders Nativos .vx da Vértice */}
+          <div className="lg:col-span-5 space-y-6">
+            
+            {/* Slider 1: Compressão de Lead Time */}
+            <div>
+              <div className="flex items-end justify-between">
+                <label htmlFor="sim-lead-time" className="text-sm font-medium text-[#F7F8FA]">
+                  Compressão de Lead Time
+                </label>
+                <span className="font-display text-[32px] leading-none text-[#F4B942]">
+                  -{simLeadTimeReduction.toFixed(1)} <span className="font-sans text-sm font-light text-[#A8B0BF]">dias</span>
+                </span>
+              </div>
+              <input
+                id="sim-lead-time"
+                type="range"
+                className="vx mt-2"
+                min="0"
+                max="7"
+                step="0.5"
+                value={simLeadTimeReduction}
+                style={{ '--p': `${(simLeadTimeReduction / 7) * 100}%` }}
+                onChange={(e) => setSimLeadTimeReduction(parseFloat(e.target.value))}
+              />
+              <div className="flex justify-between text-xs font-light text-[#A8B0BF] mt-1">
+                <span>0 dias</span>
+                <span>Lead time atual: {activeRecorte.lead_time_medio_dias.toFixed(1)}d</span>
+                <span>-7.0 dias</span>
+              </div>
+            </div>
+
+            {/* Slider 2: Corte de Atraso */}
+            <div>
+              <div className="flex items-end justify-between">
+                <label htmlFor="sim-delay-cut" className="text-sm font-medium text-[#F7F8FA]">
+                  Corte na Taxa de Atraso (SLA)
+                </label>
+                <span className="font-display text-[32px] leading-none text-[#18A957]">
+                  -{simDelayCutPct}%
+                </span>
+              </div>
+              <input
+                id="sim-delay-cut"
+                type="range"
+                className="vx mt-2"
+                min="0"
+                max="80"
+                step="5"
+                value={simDelayCutPct}
+                style={{ '--p': `${(simDelayCutPct / 80) * 100}%` }}
+                onChange={(e) => setSimDelayCutPct(parseInt(e.target.value, 10))}
+              />
+              <div className="flex justify-between text-xs font-light text-[#A8B0BF] mt-1">
+                <span>0%</span>
+                <span>Atraso atual: {formatPct(activeRecorte.taxa_atraso_pct)}</span>
+                <span>-80%</span>
+              </div>
+            </div>
+
+            <div className="pt-2 flex items-center justify-between">
+              <button
+                onClick={() => { setSimLeadTimeReduction(3.0); setSimDelayCutPct(40); }}
+                className="inline-flex items-center gap-1.5 text-xs text-[#A8B0BF] hover:text-[#F7F8FA] transition-colors"
+              >
+                <RotateCcw size={14} /> Redefinir parâmetros
+              </button>
+              <span className="text-xs text-[#A8B0BF] font-light">Microdados 100% ponderados</span>
+            </div>
+
+          </div>
+
+          {/* Painel de Resultados do Simulador */}
+          <div className="lg:col-span-7 rounded-xl border border-[#232C3B] bg-[#1A2230] p-6 flex flex-col justify-between space-y-6">
+            <div className="flex items-center justify-between border-b border-[#232C3B] pb-3">
+              <span className="text-xs uppercase tracking-wider text-[#A8B0BF] font-mono">
+                Retorno Estimado em Tempo Real
+              </span>
+              <Badge tone="ok">Projeção otimizada</Badge>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              
+              <div className="rounded-xl border border-[#232C3B] bg-[#121821] p-4">
+                <p className="text-xs font-light text-[#A8B0BF]">Pedidos Salvos do Atraso</p>
+                <p className="font-display text-[32px] leading-[1.1] text-[#F4B942] mt-1">
+                  +{formatNumber(simResults.pedidosSalvos)}
+                </p>
+                <p className="text-xs text-[#A8B0BF] mt-1">
+                  Taxa cai de {formatPct(activeRecorte.taxa_atraso_pct)} para <strong className="text-[#18A957] font-semibold">{formatPct(simResults.novaTaxaAtraso)}</strong>
                 </p>
               </div>
 
-              <div className="flex items-center gap-1.5 self-start md:self-auto">
-                <span className="text-xs text-neutral-500 mr-1 hidden sm:inline">Cenários:</span>
-                <button
-                  onClick={() => {
-                    setSimLeadTimeReduction(1.5);
-                    setSimDelayCutPct(20);
-                  }}
-                  className="px-2.5 py-1 text-xs font-medium rounded-md border border-neutral-200 hover:bg-neutral-100 transition-colors text-neutral-700"
-                >
-                  Last-Mile Leve
-                </button>
-                <button
-                  onClick={() => {
-                    setSimLeadTimeReduction(3.5);
-                    setSimDelayCutPct(45);
-                  }}
-                  className="px-2.5 py-1 text-xs font-medium rounded-md border border-neutral-200 hover:bg-neutral-100 transition-colors text-neutral-700"
-                >
-                  Cross-Docking
-                </button>
-                <button
-                  onClick={() => {
-                    setSimLeadTimeReduction(6.0);
-                    setSimDelayCutPct(70);
-                  }}
-                  className="px-2.5 py-1 text-xs font-medium rounded-md bg-neutral-900 text-white hover:bg-neutral-800 transition-colors shadow-xs"
-                >
-                  CD Regional Dedicado
-                </button>
+              <div className="rounded-xl border border-[#232C3B] bg-[#121821] p-4">
+                <p className="text-xs font-light text-[#A8B0BF]">Elevação da Avaliação (CSAT)</p>
+                <p className="font-display text-[32px] leading-[1.1] text-[#18A957] mt-1">
+                  +{simResults.ganhoNota.toFixed(2)} pts
+                </p>
+                <p className="text-xs text-[#A8B0BF] mt-1">
+                  Nota sobe para <strong className="text-[#F7F8FA] font-semibold">{simResults.novaNotaPonderada.toFixed(2)} ★</strong>
+                </p>
               </div>
+
+              <div className="rounded-xl border border-[#232C3B] bg-[#121821] p-4">
+                <p className="text-xs font-light text-[#A8B0BF]">Clientes Retidos</p>
+                <p className="font-display text-[32px] leading-[1.1] text-[#F7F8FA] mt-1">
+                  +{formatNumber(simResults.clientesAdicionaisRetidos)}
+                </p>
+                <p className="text-xs text-[#A8B0BF] mt-1">
+                  Recompras preservadas no ciclo
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-[#232C3B] bg-[#121821] p-4">
+                <p className="text-xs font-light text-[#A8B0BF]">GMV Salvo do Atraso</p>
+                <p className="font-display text-[32px] leading-[1.1] text-[#F4B942] mt-1">
+                  {formatMoney(simResults.gmvProtegido)}
+                </p>
+                <p className="text-xs text-[#A8B0BF] mt-1">
+                  Receita protegida contra atrito
+                </p>
+              </div>
+
             </div>
+
+            <div className="pt-3 border-t border-[#232C3B] flex flex-col sm:flex-row sm:items-center justify-between text-xs text-[#A8B0BF] gap-2">
+              <span>
+                Novo lead time projetado: <strong className="text-[#F7F8FA] font-mono">{simResults.novoLeadTime.toFixed(1)} dias</strong> (era {activeRecorte.lead_time_medio_dias.toFixed(1)}d)
+              </span>
+              <span className="font-mono text-[#F4B942]">vertice · elasticidade de malha</span>
+            </div>
+
           </div>
 
-          <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-5 space-y-6">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <label htmlFor="sim-lead-time-tab" className="font-semibold text-neutral-800 flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-neutral-500" />
-                    Compressão de Lead Time:
-                  </label>
-                  <span className="font-mono font-bold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded-sm">
-                    -{simLeadTimeReduction.toFixed(1)} dias
-                  </span>
-                </div>
-                <input
-                  id="sim-lead-time-tab"
-                  type="range"
-                  min="0"
-                  max="7"
-                  step="0.5"
-                  value={simLeadTimeReduction}
-                  onChange={(e) => setSimLeadTimeReduction(parseFloat(e.target.value))}
-                  className="w-full accent-neutral-900 cursor-pointer h-2 bg-neutral-200 rounded-lg"
-                />
-                <div className="flex justify-between text-[11px] text-neutral-400 font-mono">
-                  <span>0 dias</span>
-                  <span>Lead Time Atual: {activeRecorte.lead_time_medio_dias.toFixed(1)}d</span>
-                  <span>-7.0 dias</span>
-                </div>
-              </div>
+        </div>
+      </section>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <label htmlFor="sim-delay-cut-tab" className="font-semibold text-neutral-800 flex items-center gap-1.5">
-                    <ShieldAlert className="w-3.5 h-3.5 text-neutral-500" />
-                    Corte na Taxa de Atraso (SLA):
-                  </label>
-                  <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-sm border border-emerald-200">
-                    -{simDelayCutPct}%
-                  </span>
-                </div>
-                <input
-                  id="sim-delay-cut-tab"
-                  type="range"
-                  min="0"
-                  max="80"
-                  step="5"
-                  value={simDelayCutPct}
-                  onChange={(e) => setSimDelayCutPct(parseInt(e.target.value, 10))}
-                  className="w-full accent-neutral-900 cursor-pointer h-2 bg-neutral-200 rounded-lg"
-                />
-                <div className="flex justify-between text-[11px] text-neutral-400 font-mono">
-                  <span>0%</span>
-                  <span>Atraso Atual: {formatPct(activeRecorte.taxa_atraso_pct)}</span>
-                  <span>-80%</span>
-                </div>
-              </div>
-
-              <div className="pt-2 flex items-center justify-between">
-                <button
-                  onClick={() => {
-                    setSimLeadTimeReduction(3.0);
-                    setSimDelayCutPct(40);
-                  }}
-                  className="inline-flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-900 transition-colors"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  Redefinir Parâmetros Padrão
-                </button>
-                <span className="text-[11px] text-neutral-400">
-                  Modelo elástico baseado nos microdados reais
-                </span>
-              </div>
-            </div>
-
-            <div className="lg:col-span-7 bg-neutral-50/70 p-5 rounded-xl border border-neutral-200 flex flex-col justify-between space-y-4">
-              <div className="flex items-center justify-between border-b border-neutral-200/70 pb-3">
-                <span className="text-xs font-semibold uppercase tracking-wider text-neutral-600">
-                  Retorno Estimado em Tempo Real
-                </span>
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                  <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
-                  Cenário Otimizado
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-white p-4 rounded-lg border border-neutral-200/80 shadow-xs">
-                  <div className="text-xs text-neutral-500 font-medium">Pedidos Livres do Atraso</div>
-                  <div className="text-2xl font-bold text-neutral-950 font-mono mt-1">
-                    +{formatNumber(simResults.pedidosSalvos)}
-                  </div>
-                  <div className="text-xs text-neutral-500 mt-1 flex items-center gap-1">
-                    <span>Taxa cai de {formatPct(activeRecorte.taxa_atraso_pct)} para:</span>
-                    <strong className="text-emerald-700 font-semibold">{formatPct(simResults.novaTaxaAtraso)}</strong>
-                  </div>
-                </div>
-
-                <div className="bg-white p-4 rounded-lg border border-neutral-200/80 shadow-xs">
-                  <div className="text-xs text-neutral-500 font-medium">Elevação da Avaliação (CSAT)</div>
-                  <div className="text-2xl font-bold text-emerald-700 font-mono mt-1 flex items-baseline gap-1">
-                    +{simResults.ganhoNota.toFixed(2)}
-                    <span className="text-xs font-normal text-neutral-500">pts</span>
-                  </div>
-                  <div className="text-xs text-neutral-500 mt-1">
-                    Nota média sobe para <strong className="text-neutral-900">{simResults.novaNotaPonderada.toFixed(2)} ★</strong>
-                  </div>
-                </div>
-
-                <div className="bg-white p-4 rounded-lg border border-neutral-200/80 shadow-xs">
-                  <div className="text-xs text-neutral-500 font-medium">Clientes Adicionais Retidos</div>
-                  <div className="text-2xl font-bold text-neutral-950 font-mono mt-1">
-                    +{formatNumber(simResults.clientesAdicionaisRetidos)}
-                  </div>
-                  <div className="text-xs text-neutral-500 mt-1">
-                    Recompras preservadas pela entrega no prazo
-                  </div>
-                </div>
-
-                <div className="bg-white p-4 rounded-lg border border-neutral-200/80 shadow-xs">
-                  <div className="text-xs text-neutral-500 font-medium">GMV Salvo do Atraso</div>
-                  <div className="text-2xl font-bold text-neutral-900 font-mono mt-1">
-                    {formatMoney(simResults.gmvProtegido)}
-                  </div>
-                  <div className="text-xs text-neutral-500 mt-1">
-                    Receita de clientes que não sofrerão atrito
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-neutral-200/70 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-neutral-600 gap-2">
-                <span>
-                  Novo lead time projetado: <strong className="text-neutral-950 font-mono">{simResults.novoLeadTime.toFixed(1)} dias</strong> (era {activeRecorte.lead_time_medio_dias.toFixed(1)}d)
-                </span>
-                <span className="text-neutral-400 font-mono text-[11px]">
-                  Simulação Vértice · Elasticidade Logística
-                </span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-      </div>
     </div>
   );
 }
