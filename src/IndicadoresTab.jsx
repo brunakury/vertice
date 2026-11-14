@@ -482,6 +482,12 @@ export function IndicadoresTab({
   const [aiError, setAiError] = useState(null);
 
   const [showKeyModal, setShowKeyModal] = useState(false);
+  const [selectedModel, setSelectedModel] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('VERTICE_AI_MODEL') || 'hydrogen';
+    }
+    return 'hydrogen';
+  });
   const [customApiKey, setCustomApiKey] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('VERTICE_GEMINI_API_KEY') || '';
@@ -558,28 +564,48 @@ export function IndicadoresTab({
 
       const userMessageText = `Recorte Operacional (${promptPayload.uf}):\n${JSON.stringify(promptPayload, null, 2)}`;
 
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${activeKey}`;
+      const modelsToTry = [selectedModel || 'hydrogen', 'hydrogen', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+      let response = null;
+      let lastErrMsg = '';
+      let usedModel = selectedModel || 'hydrogen';
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: abortControllerRef.current.signal,
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: `${systemInstructionText}\n\n${userMessageText}` }]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.2,
-            maxOutputTokens: 500
+      for (const model of modelsToTry) {
+        try {
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${activeKey}`;
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: abortControllerRef.current.signal,
+            body: JSON.stringify({
+              contents: [
+                {
+                  role: 'user',
+                  parts: [{ text: `${systemInstructionText}\n\n${userMessageText}` }]
+                }
+              ],
+              generationConfig: {
+                temperature: 0.2,
+                maxOutputTokens: 500
+              }
+            })
+          });
+
+          if (res.ok) {
+            response = res;
+            usedModel = model;
+            break;
+          } else {
+            const errData = await res.json().catch(() => null);
+            lastErrMsg = errData?.error?.message || `Erro HTTP ${res.status}`;
           }
-        })
-      });
+        } catch (e) {
+          if (e?.name === 'AbortError') return;
+          lastErrMsg = e?.message || 'Falha de rede';
+        }
+      }
 
-      if (!response.ok) {
-        throw new Error(`Status ${response.status}: falha na comunicação com o Gemini`);
+      if (!response) {
+        throw new Error(lastErrMsg || `Modelo ${selectedModel || 'hydrogen'} não respondeu`);
       }
 
       const json = await response.json();
@@ -611,6 +637,7 @@ export function IndicadoresTab({
         impact,
         recommendation,
         source: 'gemini',
+        model: usedModel,
         uf: recorte.uf
       };
 
@@ -620,7 +647,7 @@ export function IndicadoresTab({
       if (err?.name === 'AbortError') return;
       const fallback = gerarFallbackHeuristico(recorte);
       setAiDiagnosis(fallback);
-      setAiError('Operando via diagnóstico heurístico de redundância local.');
+      setAiError(err?.message ? `API Gemini (${err.message}). Card ativo via diagnóstico heurístico local.` : 'Operando via diagnóstico heurístico de redundância local.');
     } finally {
       setAiLoading(false);
     }
@@ -823,7 +850,7 @@ export function IndicadoresTab({
                   Diagnóstico Executivo por Recorte
                 </h3>
                 <Badge tone={aiDiagnosis?.source === 'gemini' ? 'gold' : 'neutral'}>
-                  {aiDiagnosis?.source === 'gemini' ? 'Gemini 3.8 Flash' : 'Heurística Operacional'}
+                  {aiDiagnosis?.source === 'gemini' ? (aiDiagnosis?.model || selectedModel || 'Hydrogen') : 'Heurística Operacional'}
                 </Badge>
               </div>
               <p className="text-sm font-light text-[#A8B0BF] mt-0.5">
@@ -858,13 +885,33 @@ export function IndicadoresTab({
               <p className="text-xs text-[#A8B0BF] leading-relaxed">
                 Cole sua chave do Gemini 3.8 Flash. Ela será salva localmente no navegador (<code className="text-[#F4B942]">localStorage</code>).
               </p>
-              <input
-                type="password"
-                placeholder="AIzaSy..."
-                value={customApiKey}
-                onChange={(e) => setCustomApiKey(e.target.value)}
-                className="h-11 w-full rounded-lg border border-[#232C3B] bg-[#0B0F14] px-4 font-mono text-sm text-[#F7F8FA] focus:border-[#F4B942]"
-              />
+              <div className="space-y-1.5">
+                <label htmlFor="modal-model-name" className="text-xs font-semibold text-[#A8B0BF]">
+                  Modelo de IA:
+                </label>
+                <input
+                  id="modal-model-name"
+                  type="text"
+                  placeholder="hydrogen"
+                  value={selectedModel}
+                  onChange={(e) => setSelectedModel(e.target.value)}
+                  className="h-10 w-full rounded-lg border border-[#232C3B] bg-[#0B0F14] px-4 font-mono text-sm text-[#F7F8FA] focus:border-[#F4B942]"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="modal-api-key" className="text-xs font-semibold text-[#A8B0BF]">
+                  Chave de API:
+                </label>
+                <input
+                  id="modal-api-key"
+                  type="password"
+                  placeholder="AIzaSy..."
+                  value={customApiKey}
+                  onChange={(e) => setCustomApiKey(e.target.value)}
+                  className="h-10 w-full rounded-lg border border-[#232C3B] bg-[#0B0F14] px-4 font-mono text-sm text-[#F7F8FA] focus:border-[#F4B942]"
+                />
+              </div>
               <div className="flex items-center justify-between pt-2">
                 <button
                   onClick={() => {
@@ -885,6 +932,7 @@ export function IndicadoresTab({
                       if (typeof window !== 'undefined') {
                         if (customApiKey.trim()) localStorage.setItem('VERTICE_GEMINI_API_KEY', customApiKey.trim());
                         else localStorage.removeItem('VERTICE_GEMINI_API_KEY');
+                        if (selectedModel.trim()) localStorage.setItem('VERTICE_AI_MODEL', selectedModel.trim());
                       }
                       setShowKeyModal(false);
                       fetchAIDiagnosis(activeRecorte, true);
