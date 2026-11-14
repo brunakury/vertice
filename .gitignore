@@ -51,3 +51,9 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Ambiente virtual Python
+.venv/
+venv/
+__pycache__/
+*.pyc
