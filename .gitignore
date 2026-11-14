@@ -1,3 +1,17 @@
+# Environment variables and secrets
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.pem
+*.key
+*.cert
+*.crt
+!.env.example
+
 # Logs
 logs
 *.log
@@ -7,16 +21,31 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production and build outputs
 dist
 dist-ssr
-*.local
+build
+out
+.vercel
 
-# Editor directories and files
+# Cache and temporary folders
+.cache
+.turbo
+.eslintcache
+*.tsbuildinfo
+
+# Local files & OS / Editor artifacts
+*.local
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj

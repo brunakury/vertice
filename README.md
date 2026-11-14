@@ -1,218 +1,224 @@
-# vertice · Simulador Estratégico de Elasticidade de Ocupação & Expansão
+# Vértice · Plataforma Executiva de Tomada de Decisão & Elasticidade Operacional
 
-Aplicação executiva em **React + Tailwind CSS + Recharts** que reúne landing page, painel de visão executiva, simulador de elasticidade de preço, copiloto estratégico com IA simulada e geração de *Executive Brief*. O design segue o sistema de identidade e produto **vertice 2026** (tokens de cor, tipografia, espaçamento e componentes).
+[![React](https://img.shields.io/badge/React-18.x-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5.x-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.x-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Recharts](https://img.shields.io/badge/Recharts-2.x-22c55e)](https://recharts.org/)
+[![Google Gemini](https://img.shields.io/badge/AI_Engine-Gemini_%2F_Hydrogen-4285F4?logo=google&logoColor=white)](https://ai.google.dev/)
 
-> **Aviso:** todos os dados são fictícios e servem apenas para demonstração. As respostas do copiloto são simuladas no front-end (não há chamada a nenhuma API de IA) e as projeções do simulador usam premissas ilustrativas, não garantias de resultado.
+Plataforma de inteligência e simulação estratégica de alta liderança desenvolvida em **React 18, Vite, Tailwind CSS e Recharts**. O sistema combina visualização de dados executiva em modo editorial escuro (*Dark Luxury Dashboard*), simuladores de elasticidade em tempo real e diagnósticos automatizados por Inteligência Artificial (Google Gemini & modelo Hydrogen com fallback heurístico local).
+
+Demonstração online: [vertice-lemon.vercel.app](https://vertice-lemon.vercel.app/)
 
 ---
 
 ## Sumário
 
-- [Funcionalidades](#funcionalidades)
-- [Stack](#stack)
-- [Como rodar](#como-rodar)
-- [Fonte Coolvetica](#fonte-coolvetica)
-- [Estrutura do projeto](#estrutura-do-projeto)
-- [Sistema de design](#sistema-de-design)
-- [Modelo do simulador](#modelo-do-simulador)
-- [Movimento e acessibilidade](#movimento-e-acessibilidade)
-- [Personalização](#personalização)
-- [Limitações conhecidas](#limitações-conhecidas)
+- [Visão Geral](#visão-geral)
+- [Aba Indicadores (Logística & E-commerce)](#aba-indicadores-logística--e-commerce)
+  - [Base de Dados Consolidada](#base-de-dados-consolidada)
+  - [Diagnóstico Executivo por IA](#diagnóstico-executivo-por-ia)
+  - [4 KPIs de Decisão](#4-kpis-de-decisão)
+  - [Grid Estratégico (3 Perguntas de Negócio)](#grid-estratégico-3-perguntas-de-negócio)
+- [Outros Módulos da Plataforma](#outros-módulos-da-plataforma)
+- [Design System & Identidade Visual](#design-system--identidade-visual)
+- [Stack Tecnológica](#stack-tecnológica)
+- [Segurança & Publicação Open Source](#segurança--publicação-open-source)
+- [Como Executar o Projeto](#como-executar-o-projeto)
+- [Estrutura de Pastas](#estrutura-de-pastas)
 - [Licença](#licença)
 
 ---
 
-## Funcionalidades
+## Visão Geral
 
-**Landing page**
-- Menu flutuante, título em revelação por palavras e "V" facetado em 3D com paralaxe do mouse.
-- Faixa de KPIs em rolagem contínua (pausa ao passar o cursor).
-- Seção com rolagem ancorada: o número em destaque e o gráfico mudam conforme a leitura avança.
-- Bloco do copiloto com resposta digitada em tempo real e lista de princípios expansível.
-- Barra de progresso de rolagem.
+A plataforma **Vértice** foi desenhada para diretores de operações (COO), diretores financeiros (CFO) e líderes de expansão que precisam diagnosticar gargalos operacionais e simular o impacto de decisões de capital antes da execução.
 
-**Plataforma (acesso pelo botão "Acessar demonstração")**
-- **Menu lateral** em trilho: 72 px só com ícones, expande para 224 px ao passar o cursor ou focar. No celular vira uma barra inferior.
-- **Visão executiva** com quatro abas (Visão geral, Indicadores, Decisões, Histórico):
-  - número principal que acompanha o cursor sobre o gráfico mês a mês;
-  - gráfico de 12 meses: realizado e meta (jan–jun) e projeção base × cenário (jul–dez);
-  - simulador com nome do cenário, reajuste seletivo de preço (0 a 3%) e unidade de negócio;
-  - leitura estratégica, recomendação prioritária e atalho para o copiloto.
-- **Planejamento:** linha do tempo (Gantt) das iniciativas do 2S26 com progresso.
-- **Cenários:** comparação entre Conservador, Base e cenários salvos; selecionar, salvar e excluir.
-- **Riscos:** matriz de probabilidade × impacto sincronizada com a lista de riscos.
-- **Copiloto estratégico:** chat com sugestões de perguntas, resposta com métricas, alavancas, decisão sugerida, premissas, evidências e botão "Levar ao Executive Brief".
-- **Relatórios:** seleção entre relatórios e abertura do *Executive Brief* já configurado.
-- **Executive Brief (modal):** escolha de período e público, seções incluídas, prévia do documento em tempo real e exportação simulada com notificação de sucesso.
-- Busca global (navega entre as telas) e painel de notificações.
-- **Responsivo:** em tablet e celular o menu lateral vira uma barra inferior, a topbar compacta, os gráficos e tabelas se reorganizam (tabelas viram listas, o Gantt empilha) e o modal do brief ajusta a prévia.
+O projeto reúne:
+1. **Landing Page Editorial:** Apresentação da tese de produto com revelação dinâmica e paralaxe.
+2. **Visão Executiva (4 Abas):**
+   - **Visão Geral:** Desempenho de receita líquida (R$ 48,6 mi), meta de elasticidade e projeção de 12 meses.
+   - **Indicadores:** Painel aprofundado de malha logística nacional, quebra de SLA, impacto em nota e retenção, com simulador regional de Centro de Distribuição e IA generativa.
+   - **Decisões:** Acordeões de iniciativas estratégicas orientadas pelos gargalos de dados.
+   - **Histórico:** Linha temporal de auditoria e governança.
+3. **Planejamento & Gantt:** Cronograma das iniciativas de expansão e infraestrutura.
+4. **Cenários & Riscos:** Matriz de probabilidade × impacto conectada aos dados operacionais.
+5. **Copiloto Estratégico & Executive Brief:** Assistente contextual com prévia e exportação de relatórios executivos em PDF.
 
 ---
 
-## Stack
+## Aba Indicadores (Logística & E-commerce)
 
-| Tecnologia | Uso |
-| --- | --- |
-| React 18 | Interface |
-| Vite 5 | Build e servidor de desenvolvimento |
-| Tailwind CSS 3 (PostCSS) | Estilos utilitários, compilados no build |
-| Recharts 2 | Gráficos (área, linha e anel de progresso) |
-| lucide-react | Ícones |
-| Poppins (Google Fonts) | Fonte secundária, pesos 200 a 700 |
-| Coolvetica | Fonte de exibição (arquivo local) |
+A aba **Indicadores** (`src/IndicadoresTab.jsx`) atua como cockpit de decisão logística construído sobre o ecossistema de dados de e-commerce brasileiro.
 
----
+### Base de Dados Consolidada
+- **96.478 pedidos** faturados e analisados.
+- **R$ 13,22 milhões** em GMV transacionado.
+- **27 Unidades Federativas (UFs)** integradas com métricas completas de:
+  - Lead time médio de entrega (dias corridos).
+  - Taxa de atraso de SLA de entrega.
+  - Nota média de avaliação (pedidos no prazo vs. pedidos com atraso).
+  - Taxa de recompra/retenção (clientes com entrega no prazo vs. clientes com entrega atrasada).
+  - Concentração de receita e pedidos por região.
 
-## Como rodar
+### Diagnóstico Executivo por IA
+O topo do painel conta com um **Diagnóstico Executivo por Recorte** dinâmico:
+- **Modelos Suportados:** `hydrogen`, `gemini-2.5-flash`, `gemini-2.0-flash` e `gemini-1.5-flash`.
+- **Análise Reativa:** Sempre que o gestor altera o filtro de UF (ou visualiza o consolidado nacional), o componente sintetiza os dados operacionais daquela região em 3 tópicos estritamente acionáveis:
+  1. *Principal gargalo de SLA da rota*;
+  2. *Impacto na satisfação e recompra do cliente*;
+  3. *Ação imediata recomendada de malha ou estoque*.
+- **Resiliência e Fallback Local:** Caso nenhuma chave de API esteja configurada ou ocorra instabilidade de rede, o componente aciona instantaneamente um **motor heurístico interno**, gerando o diagnóstico analítico com precisão matemática sem quebrar a interface ou exibir erros.
+- **Configuração no Navegador:** Um modal acessível pelo botão de engrenagem (`⚙️`) permite testar ou informar uma chave própria do Google AI Studio diretamente na sessão (`localStorage`), sem tocar em arquivos locais.
 
-### Localmente
+### 4 KPIs de Decisão
+Indicadores que recalculam instantaneamente ao filtrar por estado ou consolidado:
+1. **Volume & GMV Total:** Total de pedidos processados e receita transacionada.
+2. **Taxa de Atraso de SLA:** Percentual de entregas que extrapolaram a data estimada (meta de referência: 8,0%).
+3. **Queda de Nota por Atraso:** Diferença em pontos na satisfação do consumidor entre compras no prazo vs. atrasadas.
+4. **Impacto na Retenção:** Diferencial na taxa de recompra decorrente de fricções logísticas.
 
-Requisitos: Node.js 18 ou superior.
-
-```bash
-npm install
-npm run dev
-```
-
-Scripts disponíveis:
-
-| Comando | Descrição |
-| --- | --- |
-| `npm run dev` | Servidor de desenvolvimento |
-| `npm run build` | Build de produção em `dist/` |
-| `npm run preview` | Pré-visualização do build |
-
-### No StackBlitz
-
-1. Crie um projeto com o template **React (Vite)** em JavaScript.
-2. Substitua `index.html`, `package.json` e `vite.config.js` na raiz e adicione `tailwind.config.js` e `postcss.config.js`.
-3. Substitua/crie todos os arquivos de `src/`.
-4. Crie `public/fonts/` e adicione a Coolvetica (veja abaixo).
-5. Apague `src/App.css` e `src/index.css` do template, se existirem.
-6. Se necessário, rode `npm install` no terminal.
-
-> O Tailwind é compilado pelo PostCSS (arquivos `tailwind.config.js`, `postcss.config.js` e `src/index.css`), sem depender de CDN. Depois de substituir os arquivos, rode `npm install` para instalar `tailwindcss`, `postcss` e `autoprefixer`.
-
----
-
-## Fonte Coolvetica
-
-A Coolvetica **não está disponível no Google Fonts** e por isso não acompanha o repositório. Para usá-la:
-
-1. Baixe a fonte e confira a licença para o seu tipo de uso (pessoal ou comercial).
-2. Coloque o arquivo em `public/fonts/` com um destes nomes:
-   - `coolvetica.otf`
-   - `coolvetica.woff2`
-   - `coolvetica.ttf`
-3. O `@font-face` em `index.html` já referencia esses caminhos.
-
-Sem o arquivo, a interface usa *Helvetica Neue / Arial* como alternativa. A Coolvetica só tem peso regular; o contraste de peso vem da combinação com o Poppins (extralight, light, regular, semibold).
-
----
-
-## Estrutura do projeto
+### Grid Estratégico (3 Perguntas de Negócio)
 
 ```
-.
-├── index.html            # Entrada HTML e fontes do Google
-├── package.json
-├── vite.config.js
-├── tailwind.config.js
-├── postcss.config.js
+┌────────────────────────────────────────────────────────────────────────┐
+│ Bloco A: Gargalos de Malha por Rota/UF                                 │
+│ Gráfico de barras (Recharts) cruzando Lead Time vs. Taxa de Atraso     │
+│ dos Top 10 estados com linha de referência de SLA em 8%.               │
+├───────────────────────────────────┬────────────────────────────────────┤
+│ Bloco B: Elasticidade e Retenção  │ Bloco C: Simulador de CD Regional  │
+│ Comparativo lado a lado de Nota   │ Sliders interativos para redução   │
+│ Média e Recompra (Prazo vs Atraso)│ de lead time e corte de atraso.    │
+│ demonstrando a perda de LTV.      │ Recálculo em tempo real de pedidos,│
+│                                   │ nota média, retenção e GMV salvo.  │
+└───────────────────────────────────┴────────────────────────────────────┘
+```
+
+---
+
+## Outros Módulos da Plataforma
+
+- **Cenários de Elasticidade:** Projeções de receita anual de R$ 102,8 mi a R$ 108,6 mi baseadas em alavancas de preço de 0% a 3% com curva de penalidade de volume.
+- **Matriz de Riscos Operacionais:** Mapeamento de 5 riscos críticos (incluindo quebra de SLA no Nordeste e concentração de malha no Sudeste) com quadrantes de probabilidade e severidade.
+- **Copiloto Estratégico:** Consulta rápida alimentada com conhecimento operacional sobre gargalos de SLA, expansão de CDs e elasticidade de margem.
+- **Executive Brief:** Gerador de memorando executivo formatado para comitês de diretoria e conselho de administração.
+
+---
+
+## Design System & Identidade Visual
+
+O design segue rigorosamente o sistema **Vértice 2026** (Dark Luxury & Editorial UI):
+
+| Token | Hex | Aplicação |
+| :--- | :--- | :--- |
+| **Fundo Principal** | `#0B0F14` | Profundidade escura de alto contraste |
+| **Superfície dos Painéis** | `#121821` | Cards executivos e containers |
+| **Controles & Sliders** | `#1A2230` | Subcards, inputs e trilhas de sliders |
+| **Bordas & Divisores** | `#232C3B` | Contorno nítido de 1px |
+| **Ouro / Destaque** | `#F4B942` | Séries em hipótese, métricas-chave e foco |
+| **Marca / Ação** | `#D62828` | Botões primários e destaque de marca |
+| **SLA no Prazo** | `#18A957` | Indicadores dentro da meta operacional |
+| **Gargalo / Alerta** | `#FFB020` | Riscos moderados e tolerância de malha |
+| **Risco Crítico** | `#E5484D` | Rupturas graves de SLA e perda de margem |
+
+- **Tipografia:** `Coolvetica` para números monumentais e títulos da marca; `Poppins` / `Newsreader` para hierarquia editorial de leitura.
+- **Controles Interativos:** Sliders de precisão com classe utilitária `.vx` e feedback instantâneo.
+
+---
+
+## Stack Tecnológica
+
+- **Core:** [React 18](https://react.dev/) + [Vite 5](https://vitejs.dev/)
+- **Estilização:** [Tailwind CSS 3](https://tailwindcss.com/) + PostCSS + Autoprefixer
+- **Visualização de Dados:** [Recharts 2](https://recharts.org/) (BarChart, ResponsiveContainer, ReferenceLine, Tooltip customizado)
+- **Iconografia:** [Lucide React](https://lucide.dev/)
+- **Inteligência Artificial:** Integração nativa com a API [Google Gemini](https://ai.google.dev/) (endpoints `gemini-2.5-flash`, `gemini-2.0-flash`, `hydrogen`) com fallback heurístico autônomo.
+
+---
+
+## Segurança & Publicação Open Source
+
+O repositório foi auditado e higienizado para publicação pública no GitHub:
+
+1. **Proteção de Segredos no Git:** O arquivo `.gitignore` bloqueia explicitamente todos os formatos de credenciais locais:
+   - `.env`, `.env.*`, `.env.local`
+   - Certificados e chaves criptográficas (`*.pem`, `*.key`, `*.cert`)
+   - Diretórios de build (`dist/`, `.vercel/`, `.turbo/`)
+2. **Zero-Config por Padrão:** Nenhuma chave de API proprietária está embutida no código-fonte. O aplicativo funciona imediatamente com diagnósticos inteligentes nativos mesmo sem qualquer chave informada.
+3. **Chave Opcional via Interface ou `.env`:** Caso queira usar sua própria cota da API Gemini:
+   - Pelo navegador: clique no ícone de engrenagem (`⚙️`) no card de diagnóstico.
+   - Pelo ambiente local: copie `.env.example` para `.env` e preencha `VITE_GEMINI_API_KEY`.
+
+---
+
+## Como Executar o Projeto
+
+### Pré-requisitos
+- **Node.js:** versão 18 ou superior.
+- **npm:** versão 9 ou superior.
+
+### Passo a Passo
+
+1. **Clone o repositório:**
+   ```bash
+   git clone https://github.com/seu-usuario/vertice.git
+   cd vertice
+   ```
+
+2. **Instale as dependências:**
+   ```bash
+   npm install
+   ```
+
+3. **(Opcional) Configure as variáveis de ambiente:**
+   ```bash
+   cp .env.example .env
+   ```
+   *Se não configurar, a aplicação usará o motor heurístico local sem interrupções.*
+
+4. **Inicie o servidor de desenvolvimento:**
+   ```bash
+   npm run dev
+   ```
+   O projeto estará acessível em `http://localhost:5173`.
+
+5. **Build de produção:**
+   ```bash
+   npm run build
+   npm run preview
+   ```
+
+---
+
+## Estrutura de Pastas
+
+```
+vertice/
+├── .env.example              # Modelo seguro para variáveis de ambiente
+├── .gitignore                # Regras de exclusão de arquivos sensíveis e builds
+├── index.html                # Ponto de entrada HTML e fontes
+├── package.json              # Dependências e scripts
+├── tailwind.config.js        # Configuração de temas e tokens Vértice
+├── vite.config.js            # Configuração do empacotador Vite
 ├── public/
-│   └── fonts/            # Coloque aqui a Coolvetica
+│   ├── favicon.svg           # Favicon vetorial da Vértice
+│   └── fonts/                # Arquivos da fonte Coolvetica
 └── src/
-    ├── main.jsx          # Ponto de entrada
-    ├── index.css         # Tailwind, @font-face, keyframes e estilos globais
-    ├── App.jsx           # Shell da plataforma (menu lateral, topbar, rotas por estado)
-    ├── data.js           # Tokens, dados, modelo do simulador e respostas do copiloto
-    ├── ui.jsx            # Hooks de movimento e componentes base (Btn, Badge, Tabs, Ring...)
-    ├── Landing.jsx       # Landing page
-    ├── Overview.jsx      # Visão executiva e suas abas
-    ├── Pages.jsx         # Planejamento, Cenários, Riscos e Relatórios
-    ├── Copilot.jsx       # Copiloto estratégico
-    └── BriefModal.jsx    # Modal do Executive Brief
+    ├── main.jsx              # Inicialização da aplicação React
+    ├── App.jsx               # Gerenciador de navegação e layout da plataforma
+    ├── Overview.jsx          # Painel de Visão Executiva (contém a aba Indicadores)
+    ├── IndicadoresTab.jsx    # Cockpit de Indicadores Olist (IA + KPIs + 3 Blocos)
+    ├── Copilot.jsx           # Copiloto Estratégico com motor de respostas
+    ├── Pages.jsx             # Telas de Planejamento, Cenários, Riscos e Relatórios
+    ├── Landing.jsx           # Landing page institucional
+    ├── BriefModal.jsx        # Modal de geração do Executive Brief
+    ├── data.js               # Dados consolidados Olist, tokens e modelo matemático
+    ├── ui.jsx                # Componentes atômicos reutilizáveis (Btn, Badge, Ring)
+    └── index.css             # Estilos globais e estilização de sliders .vx
 ```
-
-A navegação é feita por estado em `App.jsx` (sem React Router). Estados compartilhados entre telas: cenário do simulador, cenários salvos, cenário selecionado e modal do brief.
-
----
-
-## Sistema de design
-
-### Cores (sólidas, sem gradientes decorativos)
-
-| Token | Valor | Uso |
-| --- | --- | --- |
-| Background | `#0B0F14` | Fundo da aplicação |
-| Surface 01 | `#121821` | Painéis e navegação |
-| Surface 02 | `#1A2230` | Controles e seleção |
-| Surface 03 | `#232C3B` | Bordas e divisores |
-| Primary brand | `#D62828` | Ação primária e marca |
-| Accent | `#F4B942` | Série principal e destaque de hipótese |
-| Success | `#18A957` | Meta atingida (sempre com texto) |
-| Warning | `#FFB020` | Revisão necessária |
-| Danger | `#E5484D` | Risco e exclusão |
-| Text primary | `#F7F8FA` | Leitura prioritária |
-| Text secondary | `#A8B0BF` | Metadados |
-
-### Tipografia
-
-- **Coolvetica:** marca, títulos de destaque e números grandes.
-- **Poppins:** interface, textos e rótulos, nos pesos 200, 300, 400, 500 e 600; itálico para ênfase.
-
-### Geometria
-
-- Altura padrão de controles: 48 px.
-- Raios: 4 px (selos), 8 px (botões e campos), 16 px (painéis).
-- Cor nunca é o único sinal: estados semânticos sempre vêm com rótulo em texto.
-
----
-
-## Modelo do simulador
-
-Premissas ilustrativas definidas em `src/data.js` (`calc`), com reajuste de preço `p` em %:
-
-```
-receita anual = 102,8 × (1 + 0,0376 × p)            // R$ mi
-margem EBITDA = 18,4 + 0,467 × p − penalidade       // %
-penalidade    = 0,5 × (p − 2,2)  se p > 2,2, senão 0
-```
-
-Com `p = 1,5%` o resultado é R$ 108,6 mi de receita anual e 19,1% de margem, valores usados nos materiais de referência. O risco de volume é classificado em baixo (até 1%), moderado (até 2%) ou alto (acima de 2%).
-
----
-
-## Movimento e acessibilidade
-
-**Movimento:** revelações por rolagem, contadores animados, gráficos que se desenham, sublinhado deslizante nas abas, acordeões, barras que crescem e resposta do copiloto digitada. O CSS respeita `prefers-reduced-motion` e desativa animações e transições para quem preferir.
-
-**Acessibilidade (WCAG 2.1 AA como meta):**
-- Foco visível em ouro (2 px) em todos os elementos interativos.
-- Marcação semântica: `nav`, `header`, `main`, `aside`, `dialog` com `aria-modal`, abas com `role="tablist"`.
-- Gráficos e indicadores com rótulos de texto (`aria-label`) e valores também em texto.
-- Modal fecha com `Esc`; notificações usam `role="status"`.
-
----
-
-## Personalização
-
-- **Dados e textos do copiloto:** edite `ANS` e `pick` em `src/data.js`. A função `pick` escolhe a resposta por palavras-chave.
-- **Modelo do simulador:** altere `calc` e `series` em `src/data.js`.
-- **Integrar IA real:** substitua a chamada a `pick` em `src/Copilot.jsx` (função `send`) por uma requisição ao seu backend. Não coloque chaves de API no front-end.
-- **Relatórios e períodos do brief:** edite `REPORTS` em `src/Pages.jsx` e `PERIODS` em `src/BriefModal.jsx`.
-
----
-
-## Limitações conhecidas
-
-- Dados fictícios e sem persistência: ao recarregar a página, cenários salvos e seleções são perdidos.
-- "Exportar PDF" simula a exportação (mostra carregamento e notificação), mas não gera um arquivo.
-- O filtro "Unidade de negócio" afeta apenas a contribuição exibida no simulador, não o gráfico.
-- A Coolvetica precisa ser adicionada manualmente.
 
 ---
 
 ## Licença
 
-Defina a licença do repositório antes de publicar (por exemplo, MIT) e adicione o arquivo `LICENSE`. A fonte Coolvetica e a marca "vertice" têm direitos próprios e não estão incluídas neste repositório.
+Distribuído sob a licença [MIT](LICENSE). Consulte o arquivo de licença para mais informações.
