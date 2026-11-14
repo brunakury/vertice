@@ -5,6 +5,7 @@ import {
 import { ArrowUpRight, FileText, GitBranch, Pencil, ChevronDown } from 'lucide-react';
 import { C, fmt, signed, calc, series, UNITS, REAL } from './data.js';
 import { Badge, Btn, Count, Field, Reveal, Ring, SelectBox, Tabs, tone } from './ui.jsx';
+import IndicadoresTab from './IndicadoresTab.jsx';
 
 /* ------------------------------------------------------------------ */
 /* Simulador (console)                                                 */
@@ -341,7 +342,7 @@ const Overview = ({ sim, setSim, onBrief, goto, saveScenario }) => {
       <Tabs tabs={['Visão geral', 'Indicadores', 'Decisões', 'Histórico']} value={tab} onChange={setTab} />
       <div key={tab} className="animate-[pageIn_.6s_cubic-bezier(.2,.7,.2,1)] pt-8">
         {tab === 'Visão geral' && <Geral sim={sim} setSim={setSim} goto={goto} saveScenario={saveScenario} />}
-        {tab === 'Indicadores' && <Indicators />}
+        {tab === 'Indicadores' && <IndicadoresTab />}
         {tab === 'Decisões' && <Decisions onBrief={onBrief} />}
         {tab === 'Histórico' && <History />}
       </div>
