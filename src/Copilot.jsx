@@ -451,8 +451,9 @@ const Copilot = ({ onBrief, onToast }) => {
     if (onBrief) {
       onBrief({
         title: result.title,
-        summary: `${result.summary}\n\nDecisão sugerida: ${result.suggestedDecision}`,
-        period: '1S26',
+        summary: result.summary,
+        suggestedDecision: result.suggestedDecision,
+        period: '1º semestre de 2026',
       });
     } else {
       onToast?.('Executive Brief', 'Análise pronta para ser anexada ao comitê de diretoria.');

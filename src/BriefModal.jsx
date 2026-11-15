@@ -17,16 +17,27 @@ const PERIODS = {
   '1º semestre de 2026': { rec: 'R$ 48,6 mi', g: '+12,5% vs. 1S25', mar: '18,4%', md: '−1,6 p.p. da meta', perf: 'Receita atingiu 96,4% da meta de R$ 50,4 mi. EBITDA de R$ 8,94 mi, com pressão de frete e mix no Sudeste. O cenário-base projeta receita anual de R$ 102,8 mi.' },
   '1º trimestre de 2026': { rec: 'R$ 22,1 mi', g: '+11,1% vs. 1T25', mar: '18,9%', md: '−1,1 p.p. da meta', perf: 'Receita atingiu 96,9% da meta de R$ 22,8 mi. Margem EBITDA de 18,9%, com início de pressão de frete e mix no Sudeste.' },
   '2º trimestre de 2026': { rec: 'R$ 26,5 mi', g: '+13,7% vs. 2T25', mar: '18,0%', md: '−2,0 p.p. da meta', perf: 'Receita atingiu 96,0% da meta de R$ 27,6 mi. A margem recuou para 18,0%, com frete e mix no Sudeste concentrando o desvio.' },
+  '1S26': { rec: 'R$ 48,6 mi', g: '+12,5% vs. 1S25', mar: '18,4%', md: '−1,6 p.p. da meta', perf: 'Receita atingiu 96,4% da meta de R$ 50,4 mi. EBITDA de R$ 8,94 mi, com pressão de frete e mix no Sudeste. O cenário-base projeta receita anual de R$ 102,8 mi.' },
 };
 
-const BriefModal = ({ onClose, onExported, calcState, initial = {} }) => {
-  const [period, setPeriod] = useState(initial.period || '1º semestre de 2026');
-  const [audience, setAudience] = useState(initial.audience || 'Comitê executivo');
+const normalizePeriod = (p) => {
+  if (!p) return '1º semestre de 2026';
+  if (PERIODS[p]) return p;
+  if (p === '1S26' || p.toLowerCase().includes('semestre') || p.toLowerCase().includes('1s')) return '1º semestre de 2026';
+  if (p === '1T26' || p.toLowerCase().includes('1t')) return '1º trimestre de 2026';
+  if (p === '2T26' || p.toLowerCase().includes('2t')) return '2º trimestre de 2026';
+  return '1º semestre de 2026';
+};
+
+const BriefModal = ({ onClose, onExported, calcState = {}, initial = {} }) => {
+  const [period, setPeriod] = useState(normalizePeriod(initial?.period));
+  const [audience, setAudience] = useState(initial?.audience || 'Comitê executivo');
   const [inc, setInc] = useState({ perf: true, cen: true, risk: true, plan: true });
   const [busy, setBusy] = useState(false);
   const closeRef = useRef(null);
   const pages = Math.max(1, Object.values(inc).filter(Boolean).length);
-  const K = PERIODS[period];
+  const K = PERIODS[period] || PERIODS['1º semestre de 2026'];
+  const cs = calcState || { name: 'Expansão disciplinada', price: 1.5, receita: 108.6, margem: 19.1 };
   const toggle = (k) => setInc((s) => ({ ...s, [k]: !s[k] }));
 
   useEffect(() => {
@@ -79,15 +90,33 @@ const BriefModal = ({ onClose, onExported, calcState, initial = {} }) => {
               <div><p className="text-sm font-light text-[#A8B0BF]">Margem EBITDA</p><p className="font-display text-[32px] leading-none sm:text-[40px]">{K.mar}</p><p className="mt-1 text-sm text-[#F4B942]">{K.md}</p></div>
             </div>
 
-            {inc.perf && (<div className={`mt-6 ${sec}`}><h4 className="text-[16px] font-semibold">Desempenho e perspectiva</h4>
-              <p className="mt-2 text-sm font-light leading-[1.5] text-[#A8B0BF]">{K.perf}</p></div>)}
-            {inc.cen && (<div className={`mt-6 ${sec}`}><h4 className="text-[16px] font-semibold">Cenários e premissas</h4>
-              <p className="mt-2 text-sm font-light leading-[1.5] text-[#A8B0BF]">Base: R$ 102,8 mi · 18,4%. {calcState.name}: R$ {fmt(calcState.receita)} mi · {fmt(calcState.margem)}% (reajuste de {fmt(calcState.price)}%).</p></div>)}
-            {inc.risk && (<div className={`mt-6 ${sec}`}><Badge tone="gold">Atenção · Margem</Badge>
-              <p className="mt-2 text-sm leading-[1.5]">Três contratos do Sudeste concentram 38% do desvio de margem. Revisar condições antes da renovação de julho.</p></div>)}
-            {inc.plan && (<div className={`mt-6 ${sec}`}><h4 className="text-[16px] font-semibold text-[#F4B942]">Decisão solicitada ao comitê</h4>
-              <p className="mt-2 text-sm font-light leading-[1.5] text-[#A8B0BF]">Aprovar reajuste seletivo de 1,5% (+R$ 0,72 mi) e revisão de frete (+R$ 0,42 mi). Potencial de R$ 1,14 mi para atingir EBITDA de R$ 10,08 mi na base semestral.</p></div>)}
-            <p className="mt-6 text-sm font-light leading-[1.5] text-[#A8B0BF]">Fontes: ERP financeiro e CRM · Base: 30 jun 2026. Projeções são estimativas, não garantias de resultado.</p>
+            {inc.perf && (
+              <div className={`mt-6 ${sec}`}>
+                <h4 className="text-[16px] font-semibold">{initial?.title ? `Análise: ${initial.title}` : 'Desempenho e perspectiva'}</h4>
+                <p className="mt-2 text-sm font-light leading-[1.5] text-[#A8B0BF] whitespace-pre-line">{initial?.summary || K.perf}</p>
+              </div>
+            )}
+            {inc.cen && (
+              <div className={`mt-6 ${sec}`}>
+                <h4 className="text-[16px] font-semibold">Cenários e premissas</h4>
+                <p className="mt-2 text-sm font-light leading-[1.5] text-[#A8B0BF]">Base: R$ 102,8 mi · 18,4%. {cs.name}: R$ {fmt(cs.receita)} mi · {fmt(cs.margem)}% (reajuste de {fmt(cs.price)}%).</p>
+              </div>
+            )}
+            {inc.risk && (
+              <div className={`mt-6 ${sec}`}>
+                <Badge tone="gold">Atenção · Auditoria</Badge>
+                <p className="mt-2 text-sm leading-[1.5] text-[#A8B0BF]">Três contratos do Sudeste concentram 38% do desvio de margem. Revisar condições antes da renovação de julho.</p>
+              </div>
+            )}
+            {inc.plan && (
+              <div className={`mt-6 ${sec}`}>
+                <h4 className="text-[16px] font-semibold text-[#F4B942]">Decisão solicitada ao comitê</h4>
+                <p className="mt-2 text-sm font-light leading-[1.5] text-[#A8B0BF]">
+                  {initial?.suggestedDecision || initial?.decision || 'Aprovar reajuste seletivo de 1,5% (+R$ 0,72 mi) e revisão de frete (+R$ 0,42 mi). Potencial de R$ 1,14 mi para atingir EBITDA de R$ 10,08 mi na base semestral.'}
+                </p>
+              </div>
+            )}
+            <p className="mt-6 text-sm font-light leading-[1.5] text-[#A8B0BF]">Fontes: ERP financeiro, SQLite e CRM · Base: 30 jun 2026. Projeções são estimativas auditadas, não garantias de resultado.</p>
           </article>
         </div>
 

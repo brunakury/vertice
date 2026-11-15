@@ -128,7 +128,7 @@ export default function App() {
     clearTimeout(timer.current);
     timer.current = setTimeout(() => setToast(null), 4000);
   };
-  const openBrief = (initial) => setBrief(initial && initial.period ? initial : {});
+  const openBrief = (initial) => setBrief(initial || {});
   const goto = (id) => { setPage(id); window.scrollTo({ top: 0 }); };
   const enter = (id = 'visao') => { setView('app'); goto(id); };
 
