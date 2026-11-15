@@ -474,8 +474,9 @@ export function IndicadoresTab({
 }) {
   const [selectedUF, setSelectedUF] = useState('TODOS');
   const [sortMetric, setSortMetric] = useState('volume');
-  const [simLeadTimeReduction, setSimLeadTimeReduction] = useState(3.0);
-  const [simDelayCutPct, setSimDelayCutPct] = useState(40);
+  const [selectedScenario, setSelectedScenario] = useState('cd_dedicado');
+  const [simLeadTimeReduction, setSimLeadTimeReduction] = useState(6.0);
+  const [simDelayCutPct, setSimDelayCutPct] = useState(70);
 
   const [aiDiagnosis, setAiDiagnosis] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
@@ -1289,24 +1290,35 @@ export function IndicadoresTab({
           {/* Presets Rápidos */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs text-[#A8B0BF] mr-1 hidden sm:inline font-light">Cenários:</span>
-            <button
-              onClick={() => { setSimLeadTimeReduction(1.5); setSimDelayCutPct(20); }}
-              className="h-9 px-3 rounded-lg border border-[#232C3B] bg-[#1A2230] text-xs text-[#F7F8FA] hover:border-[#A8B0BF] transition-colors"
-            >
-              Last-Mile Leve
-            </button>
-            <button
-              onClick={() => { setSimLeadTimeReduction(3.5); setSimDelayCutPct(45); }}
-              className="h-9 px-3 rounded-lg border border-[#232C3B] bg-[#1A2230] text-xs text-[#F7F8FA] hover:border-[#A8B0BF] transition-colors"
-            >
-              Cross-Docking
-            </button>
-            <button
-              onClick={() => { setSimLeadTimeReduction(6.0); setSimDelayCutPct(70); }}
-              className="h-9 px-3 rounded-lg bg-[#D62828] text-xs font-semibold text-[#F7F8FA] hover:brightness-110 transition-all shadow-xs"
-            >
-              CD Regional Dedicado
-            </button>
+            {[
+              { id: 'last_mile', label: 'Last-Mile Leve', leadTime: 1.5, delayCut: 20 },
+              { id: 'cross_docking', label: 'Cross-Docking', leadTime: 3.5, delayCut: 45 },
+              { id: 'cd_dedicado', label: 'CD Regional Dedicado', leadTime: 6.0, delayCut: 70 },
+            ].map((sc) => {
+              const isSelected = selectedScenario === sc.id;
+              return (
+                <button
+                  key={sc.id}
+                  onClick={() => {
+                    setSelectedScenario(sc.id);
+                    setSimLeadTimeReduction(sc.leadTime);
+                    setSimDelayCutPct(sc.delayCut);
+                  }}
+                  className={`h-9 px-3 rounded-lg text-xs transition-all ${
+                    isSelected
+                      ? 'bg-[#D62828] font-semibold text-[#F7F8FA] shadow-xs hover:brightness-110'
+                      : 'border border-[#232C3B] bg-[#1A2230] text-[#A8B0BF] hover:text-[#F7F8FA] hover:border-[#A8B0BF]'
+                  }`}
+                >
+                  {sc.label}
+                </button>
+              );
+            })}
+            {selectedScenario === 'custom' && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-[#232C3B]/60 px-2.5 py-1 text-[11px] font-medium text-[#F4B942]">
+                Personalizado
+              </span>
+            )}
           </div>
         </div>
 
@@ -1334,7 +1346,10 @@ export function IndicadoresTab({
                 step="0.5"
                 value={simLeadTimeReduction}
                 style={{ '--p': `${(simLeadTimeReduction / 7) * 100}%` }}
-                onChange={(e) => setSimLeadTimeReduction(parseFloat(e.target.value))}
+                onChange={(e) => {
+                  setSimLeadTimeReduction(parseFloat(e.target.value));
+                  setSelectedScenario('custom');
+                }}
               />
               <div className="flex justify-between text-xs font-light text-[#A8B0BF] mt-1">
                 <span>0 dias</span>
@@ -1362,7 +1377,10 @@ export function IndicadoresTab({
                 step="5"
                 value={simDelayCutPct}
                 style={{ '--p': `${(simDelayCutPct / 80) * 100}%` }}
-                onChange={(e) => setSimDelayCutPct(parseInt(e.target.value, 10))}
+                onChange={(e) => {
+                  setSimDelayCutPct(parseInt(e.target.value, 10));
+                  setSelectedScenario('custom');
+                }}
               />
               <div className="flex justify-between text-xs font-light text-[#A8B0BF] mt-1">
                 <span>0%</span>
@@ -1373,7 +1391,11 @@ export function IndicadoresTab({
 
             <div className="pt-2 flex items-center justify-between">
               <button
-                onClick={() => { setSimLeadTimeReduction(3.0); setSimDelayCutPct(40); }}
+                onClick={() => {
+                  setSelectedScenario('cross_docking');
+                  setSimLeadTimeReduction(3.5);
+                  setSimDelayCutPct(45);
+                }}
                 className="inline-flex items-center gap-1.5 text-xs text-[#A8B0BF] hover:text-[#F7F8FA] transition-colors"
               >
                 <RotateCcw size={14} /> Redefinir parâmetros
