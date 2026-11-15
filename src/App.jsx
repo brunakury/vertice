@@ -95,10 +95,17 @@ const Topbar = ({ page, goto, onToast }) => {
       </nav>
       <div className="relative flex shrink-0 items-center gap-2">
         <form onSubmit={search} role="search" className="relative shrink-0">
-          <label htmlFor="busca" className="sr-only">Buscar na vertice</label>
-          <input id="busca" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar na vertice"
-            className="h-12 w-28 rounded-lg border border-[#232C3B] bg-[#121821] px-4 pr-8 text-sm font-light text-[#F7F8FA] transition-all duration-500 placeholder:text-[#A8B0BF] focus:w-44 focus:border-[#F4B942] sm:w-36 sm:focus:w-72" />
-          <button type="submit" aria-label="Buscar" className="absolute right-0 top-0 flex h-12 w-12 items-center justify-center text-[#A8B0BF] hover:text-[#F7F8FA]"><Search size={20} /></button>
+          <label htmlFor="busca" className="sr-only">Buscar na Vértice</label>
+          <input
+            id="busca"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar na Vértice"
+            className="h-12 w-48 rounded-lg border border-[#232C3B] bg-[#121821] pl-4 pr-11 text-sm font-light text-[#F7F8FA] transition-all duration-300 placeholder:text-[#A8B0BF] focus:w-60 focus:border-[#F4B942] sm:w-56 sm:focus:w-80"
+          />
+          <button type="submit" aria-label="Buscar" className="absolute right-0 top-0 flex h-12 w-11 items-center justify-center text-[#A8B0BF] hover:text-[#F7F8FA]">
+            <Search size={18} />
+          </button>
         </form>
         <button onClick={() => setBell(!bell)} aria-label="Notificações" aria-expanded={bell} className="flex h-12 w-12 items-center justify-center rounded-lg text-[#A8B0BF] transition-colors hover:bg-[#1A2230] hover:text-[#F7F8FA]"><Bell size={20} /></button>
         {bell && (
